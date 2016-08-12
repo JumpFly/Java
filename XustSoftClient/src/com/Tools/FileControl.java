@@ -144,8 +144,10 @@ public class FileControl {
 		JFileChooser Fch2=new JFileChooser();
 		Fch2.setDialogTitle("另存为..");
 		//默认显示
-		Fch2.showSaveDialog(null);
+		final int value=Fch2.showSaveDialog(null);
 		Fch2.setVisible(true);
+		if(value==Fch2.CANCEL_OPTION)
+			return;
 		String filepath=Fch2.getSelectedFile().getAbsolutePath();
 		 sqlhelp=new SqlHelper();
 		 try {
@@ -178,9 +180,11 @@ public class FileControl {
 		Fch1=new JFileChooser();
 		Fch1.setDialogTitle("请选择文件...");
 		//默认方式
-		Fch1.showOpenDialog(null);
+		final int value=Fch1.showOpenDialog(null);
 		//显示
 		Fch1.setVisible(true);
+		if(value==Fch1.CANCEL_OPTION)
+			return;
 		//得到选中文件的绝对路径
 		 filename=Fch1.getSelectedFile().getAbsolutePath();
 		 sqlhelp=new SqlHelper();

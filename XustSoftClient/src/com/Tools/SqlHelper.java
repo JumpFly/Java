@@ -13,7 +13,7 @@ public class SqlHelper {
 	PreparedStatement ps=null;
 	Connection ct=null;
 	ResultSet rs=null;
-	String url="jdbc:microsoft:sqlserver://127.0.0.1:1433;databaseName=SchoolDB";
+	String url="jdbc:microsoft:sqlserver://127.0.0.1:1433;databaseName=XustDB";
 	String DBuser="sa";
 	String DBpass="wei1995922";
 	String driver ="com.microsoft.jdbc.sqlserver.SQLServerDriver";
@@ -100,7 +100,7 @@ public class SqlHelper {
 		
 			switch (DBTable) {
 			case "StuTable":
-				sql="select * from Student where UserID="+IDs[0];
+				sql="select * from Student where UserID="+"'"+IDs[0]+"'";
 				ps=ct.prepareStatement(sql);
 				rs=ps.executeQuery();
 				if(rs.next()){

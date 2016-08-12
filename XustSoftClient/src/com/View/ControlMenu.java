@@ -22,7 +22,7 @@ import com.Fee.FeeMenu;
 public class ControlMenu extends JFrame implements ActionListener {
 
 	JPanel panel1=null;
-	String UserID,UserType,UserCoin;
+	String UserID,UserType;
 	Date NowDate;
 	String FormDate;
 	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -30,7 +30,7 @@ public class ControlMenu extends JFrame implements ActionListener {
 	int month; // get的0-11 代表1-12月
 	
 	JLabel Photo=null,BG=null;
-	JLabel ID,Type,Coin,LDate=new JLabel();
+	JLabel ID,Type,LDate=new JLabel();
 	JButton jb1,jb2,jb3,jb4;
 	Font myFont=null;
 	
@@ -47,17 +47,16 @@ public class ControlMenu extends JFrame implements ActionListener {
 	}
 	 private class RemindTask extends TimerTask {
          public void run() {
-          LDate.setText("Date  :"+ getTime());
+          LDate.setText("Date  ："+ getTime());
          }
     }
 	
 	 
-	public ControlMenu(String UserID,String UserType,String UserCoin){
+	public ControlMenu(String UserID,String UserType){
 	
 		myFont =new Font("黑体",Font.PLAIN,20);
 		this.UserID=UserID;
 		this.UserType=UserType;
-		this.UserCoin=UserCoin;
 		NowDate=new Date();
 		ca.setTime(NowDate); //设置日历时间
 		this.month=ca.get(Calendar.MONTH)+1;
@@ -67,13 +66,11 @@ public class ControlMenu extends JFrame implements ActionListener {
 		ID=new JLabel("UserID   :"+ UserID);
 		ID.setFont(myFont); //设置字体
 		ID.setForeground(Color.blue);
-		Coin=new JLabel("Coin :"+ UserCoin);
-		Coin.setFont(myFont); 
-		Coin.setForeground(Color.blue);
-		Type=new JLabel("UserType :"+ UserType);
+		
+		Type=new JLabel("UserType ："+ UserType);
 		Type.setFont(myFont); 
 		Type.setForeground(Color.blue);
-		LDate=new JLabel("Date  :"+ FormDate);
+		LDate=new JLabel("Date  ："+ FormDate);
 		LDate.setFont(myFont); 
 		LDate.setForeground(Color.blue);
 		
@@ -90,7 +87,6 @@ public class ControlMenu extends JFrame implements ActionListener {
 		BG.setBounds(0, 0, 410, 600);
 		Photo.setBounds(0, 0, 100, 100);
 		ID.setBounds(110, 10, 180, 30);
-		Coin.setBounds(270, 10, 160, 30);
 		Type.setBounds(110,45, 180, 30);
 		LDate.setBounds(110, 75, 300, 30);
 		
@@ -101,7 +97,7 @@ public class ControlMenu extends JFrame implements ActionListener {
 		
 		this.add(Photo);
 		this.add(ID);
-		this.add(Coin);
+	
 		this.add(Type);
 		this.add(LDate);
 		this.add(jb1);
@@ -126,14 +122,14 @@ public class ControlMenu extends JFrame implements ActionListener {
 	
 
 	public static void main(String[] args) {
-		ControlMenu CCM=new ControlMenu("1005","管理员","9999");
+		ControlMenu CCM=new ControlMenu("1005","管理员");
 
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==jb1){
-			if(!UserType.equals("校长助理")&&!UserType.equals("管理员"))
+			if(!UserType.equals("管理员"))
 				JOptionPane.showMessageDialog(this, UserType+"无此权限！");
 			else{
 				 test1=new StuMenu();
@@ -141,14 +137,14 @@ public class ControlMenu extends JFrame implements ActionListener {
 			
 		}
 		if(e.getSource()==jb2){
-			if(!UserType.equals("校长助理")&&!UserType.equals("管理员"))
+			if(!UserType.equals("管理员"))
 				JOptionPane.showMessageDialog(this, UserType+"无此权限！");
 			else{
 				test2=new RoomMenu();
 			}	
 		}
 		if(e.getSource()==jb3){
-			if(!UserType.equals("财务人员")&&!UserType.equals("管理员"))
+			if(!UserType.equals("管理员"))
 				JOptionPane.showMessageDialog(this, UserType+"无此权限！");
 			else{
 				FM=new FeeMenu(UserType);

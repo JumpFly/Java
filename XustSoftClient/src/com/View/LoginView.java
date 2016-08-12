@@ -31,13 +31,14 @@ public class LoginView extends JFrame implements ActionListener{
 	
 	ResultSet rs=null;
 	UserAddDiaLog AddDialog=null;
+	UserMailForPassword FindPassword=null;
 	JLabel BG=null; //设置背景图
 	JLabel UserID,Pass,UserType;
-	JButton jb1,jb2;//登录注册 
+	JButton jb1,jb2,jb3;//登录注册 忘记密码
 	JTextField jtf_ID=null;
 	JPasswordField jpf_pass=null;
 	JPanel myJPanel,myJPanel2;
-	String [] Type={"管理员","校长助理","财务人员","家长"};
+	String [] Type={"非会员","管理员","会员"};
 	JComboBox DownList=null;	
 	Font myFont=null;
 	
@@ -50,9 +51,10 @@ public class LoginView extends JFrame implements ActionListener{
 		jpf_pass.addActionListener(this);
 		jb1=new JButton("登录");
 		jb2=new JButton("注册");
+		jb3=new JButton("忘记密码");
 		jb1.addActionListener(this);
 		jb2.addActionListener(this);
-	
+		jb3.addActionListener(this);
 		BG=new JLabel(new ImageIcon("images/BG.png"));
 		
 		UserID=new JLabel("登录  ID：",JLabel.CENTER);
@@ -76,8 +78,9 @@ public class LoginView extends JFrame implements ActionListener{
 		jtf_ID.setBounds(150, 25, 180, 50);
 		jpf_pass.setBounds(150, 95, 180, 50);
 		DownList.setBounds(150, 160, 180, 50);
-		jb1.setBounds(70, 225, 100, 40);
-		jb2.setBounds(230, 225, 100, 40);
+		jb1.setBounds(20, 225, 100, 40);
+		jb2.setBounds(145, 225, 100, 40);
+		jb3.setBounds(270, 225, 100, 40);
 		this.add(BG);
 	
 		myJPanel=new JPanel(null);
@@ -85,6 +88,7 @@ public class LoginView extends JFrame implements ActionListener{
 		myJPanel.add(Pass);
 		myJPanel.add(jb1);
 		myJPanel.add(jb2);
+		myJPanel.add(jb3);
 		myJPanel.add(jtf_ID);
 		myJPanel.add(jpf_pass);
 		myJPanel.add(UserType);
@@ -98,7 +102,7 @@ public class LoginView extends JFrame implements ActionListener{
 	     this.setSize(410,600);
 	     this.setLocation(800,200);
 	     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	   this.setResizable(true);
+	   this.setResizable(false);
 	    //显示窗体
 	     this.setVisible(true);
 	}  
@@ -121,7 +125,6 @@ public class LoginView extends JFrame implements ActionListener{
 				while(rs.next()){
 					UserPass=rs.getString(2);
 					UserType=rs.getString(3);
-					UserCoins=rs.getString(4);
 				}
 				
 			} catch (Exception e2) {
@@ -130,14 +133,18 @@ public class LoginView extends JFrame implements ActionListener{
 			if(Pass.equals(UserPass)&&Type.equals(UserType)){
 				JOptionPane.showMessageDialog(this, "登录成功！");
 				System.out.println(UserID+"  "+UserPass+"  "+UserType);
-				ControlMenu CCM=new ControlMenu(UserID,UserType,UserCoins);
+				sqlhelp.DBclose();
+				ControlMenu CCM=new ControlMenu(UserID,UserType);
 				this.dispose();
 			}else{
 				JOptionPane.showMessageDialog(this, "ID/密码/类型 错误！");
 			}
 		}	
 		if(e.getSource()==jb2){
-			AddDialog=new UserAddDiaLog(null, "注册用户", false);
+			AddDialog=new UserAddDiaLog(null, "注册用户", true);
+		}
+		if(e.getSource()==jb3){
+			FindPassword=new UserMailForPassword(null, "找回密码", true);
 		}
 		
 	}

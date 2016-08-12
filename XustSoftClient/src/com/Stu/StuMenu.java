@@ -139,7 +139,7 @@ public class StuMenu extends JFrame implements ActionListener{
 		  UMM.queryUser(sql,this.TableParas,DBTable);
 		
 		jtb=new JTable(UMM);//把模型加入到JTable
-		
+		jtb.setRowHeight(40);
 		jsp=new JScrollPane(jtb);
 		
 		
