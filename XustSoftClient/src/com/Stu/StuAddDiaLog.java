@@ -22,35 +22,18 @@ import javax.swing.JTextField;
 import com.Tools.*;
 public class StuAddDiaLog extends JDialog implements ActionListener{
 	ResultSet rs=null;
-	String [] ClassIDs=null;
-	JComboBox DownList=null;	
-	JLabel jl[] =new JLabel[6];
-	JTextField jtf[]=new JTextField[5];
+	String [] UserPosts=null;	
 	JButton Choose,Cancel,ResBtn;//确认、取消、重置
 	 JPanel jp1,jp2,jp3;
-	String StuTable[] = {"学号","姓名","性别","年龄","入学日期","班级号"};
+	String DetailMsgTable[]= DBMsg.DetailMsgTable;
+	JLabel jl[] =new JLabel[DetailMsgTable.length+1];
+	JTextField jtf[]=new JTextField[DetailMsgTable.length+1];
 	Font myFont=null;
 	Date NowDate;
 	String FormDate;
 	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
 	
-	public String[] ReturnClassIDs(){
-		String ClassIDs="";
-		SqlHelper sqlhelp= new SqlHelper();
-		try {
-			String sql="select ClassID from Class";
-			rs=sqlhelp.queryExecute(sql);
-			while(rs.next()){
-				ClassIDs+=rs.getString(1)+" ";
-			}
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			sqlhelp.DBclose();
-		}
-		return ClassIDs.split(" ");
-	}
+	
 	
 	public StuAddDiaLog(Frame owner,String title,boolean model ){
 		super(owner,title,model); //父类构造方法，模式对话框效果
@@ -58,26 +41,27 @@ public class StuAddDiaLog extends JDialog implements ActionListener{
 		
 		NowDate=new Date();
 		FormDate=df.format(NowDate);
-		ClassIDs=ReturnClassIDs();
 		jp1=new JPanel();
 		jp2=new JPanel();
 		jp3=new JPanel();
-		jp1.setLayout(new GridLayout(6, 1));
-		jp2.setLayout(new GridLayout(6, 1));
+		jp1.setLayout(new GridLayout(jl.length, 1));
+		jp2.setLayout(new GridLayout(jl.length, 1));
 		
-		for(int i=0;i<jl.length;i++){
-			jl[i]=new JLabel(StuTable[i]);
+		jl[0]=new JLabel("账号");
+		jl[0].setFont(myFont); //设置字体
+		jp1.add(jl[0]);
+		jtf[0]=new JTextField();
+		jp2.add(jtf[0]);
+		
+		for(int i=1;i<jl.length;i++){
+			jl[i]=new JLabel(DetailMsgTable[i-1]);
 			jl[i].setFont(myFont); //设置字体
 			jp1.add(jl[i]);
-		}
-		for(int i=0;i<jtf.length;i++){
 			jtf[i]=new JTextField();
 			jp2.add(jtf[i]);
 		}
-		jtf[4].setText(FormDate);
-		DownList=new JComboBox(ClassIDs);
-		jp2.add(DownList);
 		
+	
 		Choose=new JButton("确定");
 		Cancel=new JButton("取消");
 		ResBtn=new JButton("重置");
@@ -109,7 +93,7 @@ public class StuAddDiaLog extends JDialog implements ActionListener{
 			this.dispose();
 		 }
 		if(e.getSource()==ResBtn){
-			for(int i=0;i<4;i++){
+			for(int i=0;i<jtf.length;i++){
 				jtf[i].setText("");
 			}
 		 }
@@ -117,24 +101,32 @@ public class StuAddDiaLog extends JDialog implements ActionListener{
 			int	res=JOptionPane.showConfirmDialog(null, 
 					"是否确定？", "请选择..", JOptionPane.YES_NO_OPTION);
 					if(res==JOptionPane.YES_OPTION){
+						if(jtf[0].getText().trim().equals("")||jtf[1].getText().trim().equals("")||jtf[5].getText().trim().equals(""))
+						{
+							JOptionPane.showMessageDialog(this, "账号/学号/邮箱不能为空！");
+							return;
+						}
 					UserMsgModel temp=new UserMsgModel();
 					
-					String sql="insert into Student values(?,?,?,?,?,?)";
-					String ClassID=  (String)DownList.getSelectedItem();
+					String sql="insert into DetailMsg (UserID,UserNum,UserName,UserSex,UserMajor,UserMail)values(?,?,?,?,?,?)";
 					String []paras=
-					{jtf[0].getText(),jtf[1].getText(),jtf[2].getText(),jtf[3].getText(),jtf[4].getText(),ClassID};
-					System.out.println(jtf[0].getText()+" "+jtf[1].getText()+" "+jtf[2].getText()+" "+jtf[3].getText()+" "+jtf[4].getText()+" "+ClassID);
+					{jtf[0].getText().trim(),jtf[1].getText().trim(),jtf[2].getText().trim(),jtf[3].getText().trim(),jtf[4].getText().trim(),jtf[5].getText().trim()};
+					System.out.println(jtf[0].getText()+" "+jtf[1].getText()+" "+jtf[2].getText()+" "+jtf[3].getText()+" "+jtf[4].getText()+" "+jtf[5].getText());
 			
-					SqlHelper sqlhelp =new SqlHelper();
-					String[] IDs={jtf[0].getText()};
-					if(sqlhelp.CheckExist(IDs,"StuTable")==true){
-						JOptionPane.showMessageDialog(this, "该ID已存在！");
+					SqlHelper sqlhelp =SqlHelper.getInstance();
+					String[] IDs={jtf[0].getText().trim(),jtf[1].getText().trim(),};
+					if(sqlhelp.CheckExist(IDs,"PersonTable")==true){
+						JOptionPane.showMessageDialog(this, "该ID或学号已存在！");
 					}else{
-						if(!temp.EditUser(sql, paras,"StuTable")){
+						if(!temp.EditUser(sql, paras,"DetailMsg_Up")){
 							JOptionPane.showMessageDialog(this, "添加失败！");
 						  }else{
 							  JOptionPane.showMessageDialog(this, "添加成功！");
-						 
+							  String sql2="insert into Person values(?,?,?,?,?)";
+							  String []paras2=
+									{jtf[0].getText().trim(),"123456","会员",jtf[1].getText().trim(),jtf[5].getText().trim()};
+									
+							  sqlhelp.EditExec(sql2, paras2, "PersonTable");
 						  }
 					}
 					

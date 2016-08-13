@@ -112,7 +112,7 @@ public class FeeMenu extends JFrame implements ActionListener{
 		String sql="update Person set UserCoin=UserCoin-? where UserID=?";
 		
 		String[] IDs={ID};
-		SqlHelper sqlhelp=new SqlHelper();
+		SqlHelper sqlhelp=SqlHelper.getInstance();
 		if(!sqlhelp.CheckExist(IDs, "PersonTable")){
 			JOptionPane.showMessageDialog(this, "Person表中无此用户！");
 			return;
@@ -134,7 +134,7 @@ public class FeeMenu extends JFrame implements ActionListener{
 		String MsgDa="";
 
 		String[] IDs={ID};
-		SqlHelper sqlhelp=new SqlHelper();
+		SqlHelper sqlhelp=SqlHelper.getInstance();
 		if(!sqlhelp.CheckExist(IDs, "AbsenceTable_Up")){
 			JOptionPane.showMessageDialog(this, "此用户无缺勤,无须退费！");
 			return;

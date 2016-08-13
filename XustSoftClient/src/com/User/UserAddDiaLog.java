@@ -23,14 +23,14 @@ import javax.swing.JTextField;
 import com.Tools.*;
 public class UserAddDiaLog extends JDialog implements ActionListener{
 
-	JLabel jl[] =new JLabel[5];
-	JTextField jtf1,jtf2,jtf3,jtf4;
+	JLabel jl[] =new JLabel[6];
+	JTextField jtf1,jtf2,jtf3,jtf4,jtf5;
 	JButton Choose,Cancel;//确认、取消
 //	JList jlist; //列表框
 	JComboBox DownList=null;
 	 JScrollPane jsp;
 	 JPanel jp1,jp2,jp3;
-	 String strs[]={"用户账号","用户密码","用户类型","用户邮箱","邀请码"};
+	 String strs[]={"用户账号","用户密码","用户类型","用户工号","用户邮箱","邀请码"};
 	String [] Type={"非会员","管理员","会员"};
 	
 	public static void main(String[] args) {
@@ -42,8 +42,8 @@ public class UserAddDiaLog extends JDialog implements ActionListener{
 		jp1=new JPanel();
 		jp2=new JPanel();
 		jp3=new JPanel();
-		jp1.setLayout(new GridLayout(5, 1));
-		jp2.setLayout(new GridLayout(5, 1));
+		jp1.setLayout(new GridLayout(6, 1));
+		jp2.setLayout(new GridLayout(6, 1));
 		
 		
 		for(int i=0;i<strs.length;i++){
@@ -57,6 +57,7 @@ public class UserAddDiaLog extends JDialog implements ActionListener{
 		jtf2=new JTextField();
 		jtf3=new JTextField();
 		jtf4=new JTextField();
+		jtf5=new JTextField();
 		DownList=new JComboBox(Type);
 		//jlist=new JList(Type);
 		//jlist.setVisibleRowCount(2);//设置滑动框显示多少行
@@ -67,9 +68,10 @@ public class UserAddDiaLog extends JDialog implements ActionListener{
 		jp2.add(DownList);
 		jp2.add(jtf3);
 		jp2.add(jtf4);
+		jp2.add(jtf5);
 		DownList.addActionListener(this);
-		jtf4.setText("部分类型需填邀请码");
-		jtf4.setEnabled(false);
+		jtf5.setText("部分类型需填邀请码");
+		jtf5.setEnabled(false);
 		
 		Choose=new JButton("确定");
 		Cancel=new JButton("取消");
@@ -92,29 +94,35 @@ public class UserAddDiaLog extends JDialog implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(DownList.getSelectedIndex()!=0){	
-			jtf4.setEnabled(true);
+			jtf5.setEnabled(true);
 		}else {
-			jtf4.setText("部分类型需填邀请码");
-			jtf4.setEnabled(false);
+			jtf5.setText("部分类型需填邀请码");
+			jtf5.setEnabled(false);
 		}
 		if(e.getSource()==Choose){
+			if(TextFieldIsEmpty()==false)
+			{
+				JOptionPane.showMessageDialog(this, "请填写完整！");
+				return;
+			}
 			UserMsgModel temp=new UserMsgModel();
-			String sql="insert into Person values(?,?,?,?)";
+			String sql="insert into Person values(?,?,?,?,?)";
 			String Type=  (String)DownList.getSelectedItem();
 		String []paras=
-			{jtf1.getText(),jtf2.getText(),Type,jtf3.getText()};
-		System.out.println(jtf1.getText()+"  "+jtf2.getText()+"   "+Type);
+			{jtf1.getText().trim(),jtf2.getText().trim(),Type,jtf3.getText().trim(),jtf4.getText().trim()};
+		System.out.println(jtf1.getText()+"  "+jtf2.getText()+"   "+Type+"   "+jtf3.getText()+"  "+jtf4.getText());
 		if(!Type.equals("非会员")){
-			String VerifMsg=jtf4.getText().trim();
+			String VerifMsg=jtf5.getText().trim();
 			if(VerifMsg.equals(""))
 				JOptionPane.showMessageDialog(this, "请填写邀请码！");
 			else if(!VerifMsg.equals("xustsoft"))
 				JOptionPane.showMessageDialog(this, "邀请码错误！");
 			else {
-				SqlHelper sqlhelp =new SqlHelper();
-				String[] IDs={jtf1.getText()};
-				if(sqlhelp.CheckExist(IDs,"PersonTable")==true){
-					JOptionPane.showMessageDialog(this, "该ID已存在！");
+				SqlHelper sqlhelp =SqlHelper.getInstance();
+				String[] IDs={jtf1.getText().trim()};
+				String[] Nums={jtf3.getText().trim()};
+				if(sqlhelp.CheckExist(IDs,"PersonTable")==true||sqlhelp.CheckExist(Nums,"PersonTable_Num")==true){
+					JOptionPane.showMessageDialog(this, "该ID或工号已存在！");
 				}else{
 				if(!temp.EditUser(sql, paras,"PersonTable")){
 					JOptionPane.showMessageDialog(this, "添加失败！");
@@ -125,16 +133,19 @@ public class UserAddDiaLog extends JDialog implements ActionListener{
 				}
 			}
 		}else {
-			SqlHelper sqlhelp =new SqlHelper();
-			String[] IDs={jtf1.getText()};
+			SqlHelper sqlhelp =SqlHelper.getInstance();
+			String[] IDs={jtf1.getText().trim(),jtf3.getText().trim()};
 			if(sqlhelp.CheckExist(IDs,"PersonTable")==true){
-				JOptionPane.showMessageDialog(this, "该ID已存在！");
-			}else{
+				JOptionPane.showMessageDialog(this, "该ID或工号已存在！");
+			}
+			else{
 			if(!temp.EditUser(sql, paras,"PersonTable")){
 				JOptionPane.showMessageDialog(this, "添加失败！");
 			  }else{
 				  JOptionPane.showMessageDialog(this, "添加成功！");
-					 
+				  String sql2="insert into DetailMsg (UserID,UserNum,UserMail) values('"+jtf1.getText().trim()+"','"+jtf3.getText().trim()+"','"+jtf4.getText().trim()+"')";
+				  sqlhelp.queryExe(sql2); 
+				  sqlhelp.DBclose();
 			  }
 			}
 		
@@ -146,5 +157,11 @@ public class UserAddDiaLog extends JDialog implements ActionListener{
 		 	}
 	}
 
+	public boolean TextFieldIsEmpty(){
+		if(jtf1.getText().trim().equals("")||jtf2.getText().trim().equals("")||jtf3.getText().trim().equals("")||jtf4.getText().trim().equals(""))
+			return false;
+		else
+			return true;
+	}
 	
 }

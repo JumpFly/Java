@@ -42,7 +42,7 @@ public class RoomMenu extends JFrame implements ActionListener{
 
 	public  String[] ReturnClassIDs(){
 		String ClassIDs="";
-		SqlHelper sqlhelp= new SqlHelper();
+		SqlHelper sqlhelp=SqlHelper.getInstance();
 		try {
 			String sql="select ClassID from Class";
 			rs=sqlhelp.queryExecute(sql);
@@ -61,7 +61,7 @@ public class RoomMenu extends JFrame implements ActionListener{
 	
 	public  void UpdataClassMSG(){
 		String sql="",sql2="";
-		SqlHelper sqlhelp=new SqlHelper();
+		SqlHelper sqlhelp=SqlHelper.getInstance();
 		String[]	ClassIDs=ReturnClassIDs();
 	
 		for (int i = 0; i < ClassIDs.length; i++) {

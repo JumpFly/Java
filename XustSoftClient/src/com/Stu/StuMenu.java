@@ -36,21 +36,22 @@ public class StuMenu extends JFrame implements ActionListener{
 		UserMsgModel UMM;
 		DBMsg 	dbMsg=new DBMsg();
 		
-		String DBTable="StuTable";
-		String []TableParas=dbMsg.StuTable;
-		String [] ClassIDs=null;
+		String DBTable="DetailTable";
+		String []TableParas=dbMsg.DetailMsgTable;
+		String [] UserPosts=null;
 		StuAddDiaLog stuAddDiaLog=null;
-		StuUpDiaLog uud=null;
+		UserUPMsg  uum;
+	//	StuUpDiaLog uud=null;
 		
 		
-		public String[] ReturnClassIDs(){
-			String ClassIDs="";
-			SqlHelper sqlhelp= new SqlHelper();
+		public String[] ReturnUserPosts(){
+			String UserPost="";
+			SqlHelper sqlhelp= SqlHelper.getInstance();
 			try {
-				String sql="select ClassID from Class";
+				String sql="select UserPost from XustPost";
 				rs=sqlhelp.queryExecute(sql);
 				while(rs.next()){
-					ClassIDs+=rs.getString(1)+" ";
+					UserPost+=rs.getString(1)+" ";
 				}
 				
 			} catch (Exception e) {
@@ -58,17 +59,17 @@ public class StuMenu extends JFrame implements ActionListener{
 			} finally {
 				sqlhelp.DBclose();
 			}
-			return ClassIDs.split(" ");
+			return UserPost.split(" ");
 		}
 		
 		public  void UpdataClassMSG(){
 			String sql="",sql2="";
-			SqlHelper sqlhelp=new SqlHelper();
-			String[]	ClassIDs=ReturnClassIDs();
+			SqlHelper sqlhelp=SqlHelper.getInstance();
+			UserPosts=ReturnUserPosts();
 		
-			for (int i = 0; i < ClassIDs.length; i++) {
+			for (int i = 0; i < UserPosts.length; i++) {
 				int NUM=0;
-				sql="select *from Student where ClassID="+"'"+ClassIDs[i]+"'";
+				sql="select *from DetailMsg where UserPost="+"'"+UserPosts[i]+"'";
 				try {
 					rs=sqlhelp.queryExecute(sql);
 					while(rs.next()){
@@ -79,7 +80,7 @@ public class StuMenu extends JFrame implements ActionListener{
 				}finally {
 					sqlhelp.DBclose();
 				}
-				sql2="update Class set PersonNum="+"'"+NUM+"'"+" where ClassID="+"'"+ClassIDs[i]+"'";
+				sql2="update XustPost set PersonNum="+"'"+NUM+"'"+" where UserPost="+"'"+UserPosts[i]+"'";
 					try {
 					sqlhelp.queryExe(sql2);
 				} catch (Exception e2) {
@@ -114,7 +115,7 @@ public class StuMenu extends JFrame implements ActionListener{
 		MsgFileGetOut=new JButton("导出");
 		MsgFileGetOut.addActionListener(this);
 		
-		jl=new JLabel("请输入账号");
+		jl=new JLabel("请输入学号");
 		jp1.add(MsgFileGetIn);
 		jp1.add(jl);
 		jp1.add(jtf);
@@ -135,7 +136,7 @@ public class StuMenu extends JFrame implements ActionListener{
 		
 		//创建数据模型对象
 		  UMM=new UserMsgModel();
-		  String sql ="select * from Student";
+		  String sql ="select * from DetailMsg";
 		  UMM.queryUser(sql,this.TableParas,DBTable);
 		
 		jtb=new JTable(UMM);//把模型加入到JTable
@@ -146,8 +147,8 @@ public class StuMenu extends JFrame implements ActionListener{
 		this.add(jsp);
 		this.add(jp1,"North");
 		this.add(jp2,"South");
-		this.setTitle("学生管理");
-		this.setSize(500,400);
+		this.setTitle("成员管理");
+		pack();
 		this.setVisible(true);
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
@@ -178,20 +179,20 @@ public class StuMenu extends JFrame implements ActionListener{
 			 * */
 			UpdataClassMSG();
 			UMM=new UserMsgModel();
-			 String sql3 ="select * from Student";
+			 String sql3 ="select * from DetailMsg";
 			  UMM.queryUser(sql3,this.TableParas,DBTable);
 			jtb.setModel(UMM);//获取新的数据模型 		
 		}
 		
-		if(e.getSource()==jb1){
-			String ID =jtf.getText();
+		if(e.getSource()==jb1){//查询
+			String UserNum =jtf.getText();
 			String sql;
 			 UMM=new UserMsgModel();
-			if(ID.equals("")){
-				  sql ="select * from Student";
+			if(UserNum.equals("")){
+				  sql ="select * from DetailMsg";
 				  UMM.queryUser(sql,this.TableParas,DBTable);
 			}else{
-			 sql="select * from Student where UserID="+ID;
+			 sql="select * from DetailMsg where UserNum="+UserNum;
 			 
 			  UMM.queryUser(sql,this.TableParas,DBTable);
 			}
@@ -201,13 +202,15 @@ public class StuMenu extends JFrame implements ActionListener{
 		
 		if(e.getSource()==jb3){
 			int rowNum=this.jtb.getSelectedRow();
+			String UserID=(String)UMM.getValueAt(rowNum, 0);
 			if(rowNum==-1){
 				JOptionPane.showMessageDialog(this, "请选中一行");
 			    return;
 			}
-			uud=new StuUpDiaLog(this, "修改用户数据", true, UMM, rowNum);
+		//	uud=new StuUpDiaLog(this, "修改用户数据", true, UMM, rowNum);
+			uum=new UserUPMsg(this, true, UserID);
 				UMM=new UserMsgModel();
-				String sql2 ="select * from Student";
+				String sql2 ="select * from DetailMsg";
 				UMM.queryUser(sql2,this.TableParas,DBTable);
 				jtb.setModel(UMM);//获取新的数据模型 
 		}
@@ -241,7 +244,7 @@ public class StuMenu extends JFrame implements ActionListener{
 						
 						
 						UMM=new UserMsgModel();
-						 String sql2 ="select * from Student";
+						 String sql2 ="select * from DetailMsg";
 						  UMM.queryUser(sql2,this.TableParas,DBTable);
 						jtb.setModel(UMM);//获取新的数据模型 
 						

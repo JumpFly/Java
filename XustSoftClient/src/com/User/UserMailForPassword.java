@@ -31,7 +31,7 @@ public class UserMailForPassword extends JDialog implements ActionListener{
 	JLabel Tip=null;
 	JTextField jtf1,jtf2,jtf3,jtf4;
 	String newPass="",tempstt="";
-	MyNewpassWorker NewpassWorker=null;
+//	MyNewpassWorker NewpassWorker=null;
 	//JPasswordField Newpassword;
 	JButton GetVerif,Choose,Cancel;//确认、取消
 	JComboBox DownList=null;
@@ -41,7 +41,7 @@ public class UserMailForPassword extends JDialog implements ActionListener{
 	String [] Type={"非会员","管理员","会员"};
 	VerifMail vmMail=null;//发送验证码邮件
 	String verify;//验证码
-	SqlHelper sqlhelp= new SqlHelper();
+	SqlHelper sqlhelp=SqlHelper.getInstance();
 	ResultSet rs=null;
 	
 	String UserID=null;
@@ -83,7 +83,7 @@ public class UserMailForPassword extends JDialog implements ActionListener{
 	
 		
 	}
-	
+/*	
 	private class MyNewpassWorker extends SwingWorker<Void, Void>{
 		private boolean Flag =true;
 		public boolean GetFlag() {
@@ -121,7 +121,7 @@ public class UserMailForPassword extends JDialog implements ActionListener{
 	
 		
 	}
-	
+*/
 	
 	
 	public static void main(String[] args) {
@@ -179,8 +179,8 @@ public class UserMailForPassword extends JDialog implements ActionListener{
 		this.setSize(320,320);
 		this.setVisible(true);
 		this.setResizable(false);
-		 NewpassWorker=new MyNewpassWorker();
-		NewpassWorker.execute();
+//		 NewpassWorker=new MyNewpassWorker();
+//		NewpassWorker.execute();
 		
 	}
 	
@@ -287,7 +287,8 @@ public class UserMailForPassword extends JDialog implements ActionListener{
 		
 		if(e.getSource()==Cancel){
 			this.dispose();
-			NewpassWorker.SetFlag(false);
+			
+//			NewpassWorker.SetFlag(false);
 		 	}
 	}
 

@@ -119,7 +119,7 @@ public class LoginView extends JFrame implements ActionListener{
 			String UserID=jtf_ID.getText().trim();
 			String Type=  (String)DownList.getSelectedItem();
 			String UserCoins="";
-			SqlHelper sqlhelp= new SqlHelper();
+			SqlHelper sqlhelp=SqlHelper.getInstance();
 			try {
 				rs=sqlhelp.queryExec(UserID);		
 				while(rs.next()){

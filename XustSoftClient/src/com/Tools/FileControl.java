@@ -26,8 +26,8 @@ public class FileControl {
 	public String TransName(String DBTable){
 		String Table="";
 		switch (DBTable) {
-		case "FeeTable":
-			Table="Fee";
+		case "DetailTable":
+			Table="DetailMsg";
 			break;
 		case "AbsenceTable":
 			Table="Absence";
@@ -50,8 +50,8 @@ public class FileControl {
 	public String ReturnSql(String DBTable){
 		String sql="";
 		switch (DBTable) {
-		case "FeeTable":
-			sql="insert into Fee values(?,?,?,?,?,?,?,?,?)";
+		case "DetailTable":
+			sql="insert into DetailMsg values(?,?,?,?,?,?,?,?,?)";
 			break;
 		case "AbsenceTable":
 			sql="insert into Absence values(?,?,?)";
@@ -88,26 +88,29 @@ public class FileControl {
 			MsgData.add(msString);
 		}break;
 		
-		case "ClassTable":
+		case "XustPostTable":
 			while(rs.next()){
 				String msString="";
 				msString+=rs.getString(1).trim()+" ";
-				msString+=rs.getString(2).trim()+" ";
-				msString+=rs.getInt(3);
+				msString+=rs.getInt(2);
 				MsgData.add(msString);
 			}break;
-		case "FeeTable":
+		case "DetailTable":
 			while(rs.next()){
-				String msString="";
-				msString+=rs.getString(1).trim()+" ";
-				msString+=rs.getInt(2)+" ";
-				msString+=rs.getFloat(3)+" ";
-				msString+=rs.getFloat(4)+" ";
-				msString+=rs.getFloat(5)+" ";
-				msString+=rs.getFloat(6)+" ";
-				msString+=rs.getFloat(7)+" ";
-				msString+=rs.getFloat(8)+" ";
-				msString+=rs.getString(9).trim();
+				String msString="",stt="";
+				for(int i=0;i<9;i++){
+					stt=rs.getString(i+1);
+					msString+=(stt==null||stt.equals(""))?"null ":(stt.trim()+" ");
+				}
+//				msString+=rs.getString(1).trim()+" ";
+//				msString+=rs.getString(2).trim()+" ";
+//				msString+=rs.getString(3).trim()+" ";
+//				msString+=rs.getString(4).trim()+" ";
+//				msString+=rs.getString(5).trim()+" ";
+//				msString+=rs.getString(6).trim()+" ";
+//				msString+=rs.getString(7).trim()+" ";
+//				msString+=rs.getString(8).trim()+" ";
+//				msString+=rs.getString(9);
 				MsgData.add(msString);
 			}break;
 		case "AbsenceTable":
@@ -124,7 +127,8 @@ public class FileControl {
 				msString+=rs.getString(1).trim()+" ";
 				msString+=rs.getString(2).trim()+" ";
 				msString+=rs.getString(3).trim()+" ";
-				msString+=rs.getString(4).trim();
+				msString+=rs.getString(4).trim()+" ";
+				msString+=rs.getString(5).trim();
 				MsgData.add(msString);
 			}break;
 		default:
@@ -149,7 +153,7 @@ public class FileControl {
 		if(value==Fch2.CANCEL_OPTION)
 			return;
 		String filepath=Fch2.getSelectedFile().getAbsolutePath();
-		 sqlhelp=new SqlHelper();
+		 sqlhelp=SqlHelper.getInstance();
 		 try {
 			 	fw=new FileWriter(filepath);
 				bw=new BufferedWriter(fw);
@@ -187,7 +191,7 @@ public class FileControl {
 			return;
 		//得到选中文件的绝对路径
 		 filename=Fch1.getSelectedFile().getAbsolutePath();
-		 sqlhelp=new SqlHelper();
+		 sqlhelp=SqlHelper.getInstance();
 		 try {
 				fr=new FileReader(filename);
 				br=new BufferedReader(fr);

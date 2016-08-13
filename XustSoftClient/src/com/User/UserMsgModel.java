@@ -24,7 +24,7 @@ public class UserMsgModel extends AbstractTableModel {
 				String DBpass="wei1995922";
 				String driver ="com.microsoft.jdbc.sqlserver.SQLServerDriver";
 	public boolean EditUser(String sql,String []paras,String DBTable){
-		SqlHelper sqlhelp =new SqlHelper();
+		SqlHelper sqlhelp =SqlHelper.getInstance();
 		return sqlhelp.EditExec(sql, paras,DBTable);
 		
 	}
@@ -40,7 +40,7 @@ public class UserMsgModel extends AbstractTableModel {
 			columnNames.add(paras[i]);
 		
 		try {
-			sqlhelp =new SqlHelper();
+			sqlhelp =SqlHelper.getInstance();
 		ResultSet	rs=sqlhelp.queryExecute(sql);
 			
 		rowData=dbMsg.ReturnData(rs, DBTable);

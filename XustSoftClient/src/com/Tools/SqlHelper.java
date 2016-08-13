@@ -19,6 +19,20 @@ public class SqlHelper {
 	String driver ="com.microsoft.jdbc.sqlserver.SQLServerDriver";
 	
 	
+	 private static SqlHelper instance=null;
+	    public static SqlHelper getInstance(){
+	        if(instance==null){
+	            synchronized(SqlHelper.class){
+	                if(instance==null){
+	                    instance=new SqlHelper();
+	                }
+	            }
+	        }
+	        return instance;
+	    }
+	    private SqlHelper(){}
+	
+	
 	//关闭数据库资源
 	public void DBclose(){
 
@@ -99,8 +113,8 @@ public class SqlHelper {
 			ct=DriverManager.getConnection(url,DBuser,DBpass);
 		
 			switch (DBTable) {
-			case "StuTable":
-				sql="select * from Student where UserID="+"'"+IDs[0]+"'";
+			case "DetailTable":
+				sql="select * from DetailMsg where UserID="+"'"+IDs[0]+"' or"+" UserNum='"+IDs[1]+"'";
 				ps=ct.prepareStatement(sql);
 				rs=ps.executeQuery();
 				if(rs.next()){
@@ -141,7 +155,7 @@ public class SqlHelper {
 				break;
 
 			case "ClassTable":
-				sql="select * from Class where ClassID="+IDs[0];
+				sql="select * from Class where ClassID="+"'"+IDs[0]+"'";
 				ps=ct.prepareStatement(sql);
 				rs=ps.executeQuery();
 				if(rs.next()){
@@ -150,7 +164,7 @@ public class SqlHelper {
 				}
 				break;
 			case "PersonTable":
-				sql="select * from Person where UserID="+IDs[0];
+				sql="select * from Person where  UserID="+"'"+IDs[0]+"' or"+" UserNum='"+IDs[1]+"'";
 				ps=ct.prepareStatement(sql);
 				rs=ps.executeQuery();
 				if(rs.next()){
@@ -158,7 +172,7 @@ public class SqlHelper {
 					b=true;
 				}
 				break;
-
+		
 			default:
 				break;
 			}
@@ -191,28 +205,12 @@ public class SqlHelper {
 					if(i==2)
 						ps.setInt(i+1,Integer.parseInt(paras[i]));		
 				}break;
-			case "FeeTable":
-				for(int i=0;i<paras.length;i++){
-					if(i==0||i==8)
-					ps.setString(i+1, paras[i]);
-					if(i==1)
-					ps.setInt(i+1,Integer.parseInt(paras[i]));	
-					if(i>1&&i<8)
-					ps.setFloat(i+1, Float.parseFloat(paras[i]));	
-				}break;
-				
+			
 			case "PersonTable":
 				for(int i=0;i<paras.length;i++){
 					ps.setString(i+1, paras[i]);
 				}break;
-			case "PersonTable_Up"://收费时使用
-				for(int i=0;i<paras.length;i++){
-					if(i==0)
-						ps.setFloat(i+1, Float.parseFloat(paras[i]));
-					else{
-						ps.setString(i+1, paras[i]);
-					}
-				}break;
+			
 			case "AbsenceTable":
 				for(int i=0;i<paras.length;i++){
 					ps.setString(i+1, paras[i]);
@@ -230,14 +228,10 @@ public class SqlHelper {
 						ps.setString(i+1, paras[i]);
 					}
 				}break;
-			case "StuTable_update"://修改信息,第3位是年龄 i=2
+			case "DetailMsg_Up"://修改信息
 				for(int i=0;i<paras.length;i++){
-					if(i==2){
-						int Age=Integer.parseInt(paras[i]);
-						ps.setInt(i+1, Age);
-					}else 	{
 						ps.setString(i+1, paras[i]);
-					}
+					
 				}break;
 			case "delete":
 				for(int i=0;i<paras.length;i++){

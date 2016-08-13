@@ -5,7 +5,7 @@ import java.util.Vector;
 
 public class DBMsg {
 	Vector	rowData=new Vector();
-	public static final String[] StuTable = {"学号","姓名","性别","年龄","入学日期","班级号"};
+	public static final String[] DetailMsgTable = {"学号","姓名","性别","专业","邮箱"};
 	public static final String[] ClassTable = {"班级号","班级名","人数"};
 	public static final String[] FeeTable = {"学号","月份","住宿费","伙食费","书本费","空调费","暖气费","退费","父母职称"};
 	public static final String[] AbsenceTable = {"学号","日期","班级号"};
@@ -15,15 +15,14 @@ public class DBMsg {
 		rowData.clear();
 		try {
 		switch (DBTable) {
-		case "StuTable":
+		case "DetailTable":
 			while(rs.next()){
 			Vector hang=new Vector();
-			hang.add(rs.getString(1));
 			hang.add(rs.getString(2));
 			hang.add(rs.getString(3));
-			hang.add(rs.getInt(4));
+			hang.add(rs.getString(4));
 			hang.add(rs.getString(5));
-			hang.add(rs.getString(6));
+			hang.add(rs.getString(7));
 			rowData.add(hang);
 		}break;
 		

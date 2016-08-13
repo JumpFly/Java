@@ -88,7 +88,7 @@ public class ClassAddDiaLog extends JDialog implements ActionListener{
 			{jtf1.getText(),jtf2.getText(),jtf3.getText()};
 		System.out.println(jtf1.getText()+"  "+jtf2.getText()+"   "+jtf3.getText());
 		
-			SqlHelper sqlhelp =new SqlHelper();
+			SqlHelper sqlhelp =SqlHelper.getInstance();
 			String ClassID="'"+jtf1.getText().trim()+"'";
 			String[] IDs={ClassID};
 			if(sqlhelp.CheckExist(IDs,"ClassTable")==true){

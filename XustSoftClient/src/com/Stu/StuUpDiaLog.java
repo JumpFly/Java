@@ -39,7 +39,7 @@ public class StuUpDiaLog extends JDialog implements ActionListener{
 	
 	public String[] ReturnClassIDs(){
 		String ClassIDs="";
-		SqlHelper sqlhelp= new SqlHelper();
+		SqlHelper sqlhelp= SqlHelper.getInstance();
 		try {
 			String sql="select ClassID from Class";
 			rs=sqlhelp.queryExecute(sql);

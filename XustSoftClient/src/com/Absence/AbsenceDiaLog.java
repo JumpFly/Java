@@ -98,7 +98,7 @@ public class AbsenceDiaLog extends JDialog implements ActionListener{
 			{jtf1.getText(),jtf2.getText(),jtf3.getText()};
 		System.out.println(jtf1.getText()+"  "+jtf2.getText()+"   "+jtf3.getText());
 		
-			SqlHelper sqlhelp =new SqlHelper();
+			SqlHelper sqlhelp =SqlHelper.getInstance();
 			/*
 			 * 注意：缺勤记录 以学号+日期作为主键
 			 * */

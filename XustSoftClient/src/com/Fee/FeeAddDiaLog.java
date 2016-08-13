@@ -111,7 +111,7 @@ public class FeeAddDiaLog extends JDialog implements ActionListener{
 			for(int i=0;i<paras.length;i++)
 				System.out.print(paras[i]+" ");
 		
-			SqlHelper sqlhelp =new SqlHelper();
+			SqlHelper sqlhelp =SqlHelper.getInstance();
 			/*
 			 * 注意：缺勤记录 以学号+月份作为主键
 			 * */
