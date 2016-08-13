@@ -98,10 +98,11 @@ public class StuAddDiaLog extends JDialog implements ActionListener{
 			}
 		 }
 		if(e.getSource()==Choose){
+			
 			int	res=JOptionPane.showConfirmDialog(null, 
 					"是否确定？", "请选择..", JOptionPane.YES_NO_OPTION);
 					if(res==JOptionPane.YES_OPTION){
-						if(jtf[0].getText().trim().equals("")||jtf[1].getText().trim().equals("")||jtf[5].getText().trim().equals(""))
+						if(TextFiledIsEmpty())
 						{
 							JOptionPane.showMessageDialog(this, "账号/学号/邮箱不能为空！");
 							return;
@@ -133,6 +134,17 @@ public class StuAddDiaLog extends JDialog implements ActionListener{
 					}
 			}
 		
+	}
+	public boolean TextFiledIsEmpty(){
+		boolean flag=false;
+		String jtf0=jtf[0].getText().trim();
+		String jtf1=jtf[0].getText().trim();
+		String jtf5=jtf[0].getText().trim();
+		if(jtf0.toLowerCase().equals("null")||jtf1.toLowerCase().equals("null")||jtf5.toLowerCase().equals("null"))
+			flag= true;
+		if(jtf0.equals("")||jtf1.equals("")||jtf5.equals(""))
+			flag= true;
+		return flag;
 	}
 
 }

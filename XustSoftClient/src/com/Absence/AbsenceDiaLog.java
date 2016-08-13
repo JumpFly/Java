@@ -29,7 +29,7 @@ public class AbsenceDiaLog extends JDialog implements ActionListener{
 	JButton Choose,Cancel,ResBtn;//确认、取消
 	 JScrollPane jsp;
 	 JPanel jp1,jp2,jp3;
-	 String[] AbsenceTable = {"学号","日期","班级号"};
+	 String[] AbsenceTable =DBMsg.AbsenceTable;
 		Font myFont=null;
 		Date NowDate;
 		String FormDate;
@@ -91,33 +91,49 @@ public class AbsenceDiaLog extends JDialog implements ActionListener{
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource()==Choose){
+			if(e.getSource()==Choose){
+				if(jtf1.getText().trim().equals("")||jtf2.getText().trim().equals("")||jtf3.getText().trim().equals(""))
+				{
+					JOptionPane.showMessageDialog(this, "请填写完整！");
+					return;
+				}
+			
+			
+				
+				
 			UserMsgModel temp=new UserMsgModel();
 			String sql="insert into Absence values(?,?,?)";
 		String []paras=
 			{jtf1.getText(),jtf2.getText(),jtf3.getText()};
 		System.out.println(jtf1.getText()+"  "+jtf2.getText()+"   "+jtf3.getText());
 		
-			SqlHelper sqlhelp =SqlHelper.getInstance();
+		
 			/*
 			 * 注意：缺勤记录 以学号+日期作为主键
 			 * */
-			String[] IDs={jtf1.getText(),jtf2.getText()};
-		//	if(sqlhelp.CheckExist(jtf1.getText()+" "+jtf2.getText(),"AbsenceTable")==true){
+			SqlHelper sqlhelp =SqlHelper.getInstance();
+			String[] IDs={jtf1.getText().trim(),jtf2.getText().trim()};
+			String[] UserNum={jtf1.getText().trim()};
+			
+			if(!sqlhelp.CheckExist(UserNum,"DetailTable_Up")){
+				JOptionPane.showMessageDialog(this, "该学号不存在！");
+				return;
+			}
+			
 			if(sqlhelp.CheckExist(IDs,"AbsenceTable")==true){
-				JOptionPane.showMessageDialog(this, "该ID已存在！");
+				JOptionPane.showMessageDialog(this, "该学号日期记录已存在！");
 			}else{
 			if(!temp.EditUser(sql, paras,"AbsenceTable")){
 				JOptionPane.showMessageDialog(this, "添加失败！");
 			  }else{
-				  
 				  JOptionPane.showMessageDialog(this, "添加成功！");
-				  
+				  this.dispose();
 			  }
 		 }
 		}
 		if(e.getSource()==ResBtn){
 			jtf1.setText("");
+			jtf2.setText(FormDate);
 			jtf3.setText("");
 		 	}
 		if(e.getSource()==Cancel){

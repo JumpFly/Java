@@ -15,6 +15,7 @@ import javax.swing.JTextField;
 import com.Stu.StuAddDiaLog;
 import com.Tools.DBMsg;
 import com.Tools.FileControl;
+import com.Tools.SqlHelper;
 import com.User.UserMsgModel;
 
 public class AbsenceMenu extends JFrame implements ActionListener{
@@ -38,6 +39,7 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 	String []TableParas=dbMsg.AbsenceTable;
 	public AbsenceMenu(String Type){
 		this.UserType=Type;
+		
 		Add=new JButton("新增");
 		Add.addActionListener(this);
 		Delete=new JButton("删除");
@@ -78,6 +80,13 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 		
 		jsp=new JScrollPane(jtb);
 		
+		if(!UserType.equals("管理员")){
+			Add.setEnabled(false);
+			Delete.setEnabled(false);
+			MsgFileGetIn.setEnabled(false);
+			MsgFileGetOut.setEnabled(false);
+		}
+		
 		
 		this.add(jsp);
 		this.add(jp1,"North");
@@ -91,7 +100,7 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 	}
 	
 	public static void main(String[] args) {
-		new AbsenceMenu("校长助理");
+		new AbsenceMenu("管理员");
 		
 	}
 
@@ -99,10 +108,6 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==MsgFileGetIn){
 			//导入
-			if(this.UserType.equals("家长")){
-				JOptionPane.showMessageDialog(this, "家长无此权限！");
-				return;
-			}
 			FileCon=new FileControl();
 			FileCon.ReadInFile(this.DBTable);
 		}else if(e.getSource()==MsgFileGetOut){
@@ -112,18 +117,12 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 		}
 		
 		if(e.getSource()==Add){
-			if(this.UserType.equals("家长")){
-				JOptionPane.showMessageDialog(this, "家长无此权限！");
-			}
-			else{
+			
 			AbsenceDiaLog test=new AbsenceDiaLog(this, "缺勤记录", false);
-			}
+			
 			
 		}else if(e.getSource()==Delete){
-			if(this.UserType.equals("家长")){
-				JOptionPane.showMessageDialog(this, "家长无此权限！");
-				return;
-			}
+			
 			//删除
 			int rowNum=this.jtb.getSelectedRow();
 			if(rowNum==-1){
@@ -136,7 +135,7 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 			int	res=JOptionPane.showConfirmDialog(null, 
 					"是否打算删除？", "请选择..", JOptionPane.YES_NO_OPTION);
 					if(res==JOptionPane.YES_OPTION){
-						String sql ="delete from Absence where UserID=?";
+						String sql ="delete from Absence where UserNum=?";
 						String[] paras={ID};
 						UserMsgModel temp=new UserMsgModel();
 						if(temp.EditUser(sql,paras,"delete")){
@@ -162,22 +161,30 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 			jtb.setModel(UMM);//获取新的数据模型 		
 		}
 		if(e.getSource()==jb1){
-			String ID =jtf.getText();
+			String UserNum =jtf.getText();
 			String sql;
 			 UMM=new UserMsgModel();
-			if(ID.equals("")){
+			if(UserNum.equals("")){
 				  sql ="select * from Absence";
 				  UMM.queryUser(sql,this.TableParas,DBTable);
+				  jtb.setModel(UMM);//获取新的数据模型 
 			}else{
-			 sql="select * from Absence where UserID="+ID;
-			 /*
-			  * 有空最好改善一下交互，若查找的ID不存在则给出提示。
-			  * */
+			 sql="select * from Absence where UserNum='"+UserNum+"'";
+			
+			 SqlHelper sqlhelp=SqlHelper.getInstance();
+			String[] UserNums={UserNum};
+			 if(sqlhelp.CheckExist(UserNums, "AbsenceTable_Up")){
+				 UMM.queryUser(sql,this.TableParas,DBTable);
+				 jtb.setModel(UMM);//获取新的数据模型 
+			 }
+				
+			 else
+				 JOptionPane.showMessageDialog(this, "无该学号记录！");
 			 
-			  UMM.queryUser(sql,this.TableParas,DBTable);
+			 
 			}
 		
-			jtb.setModel(UMM);//获取新的数据模型 
+			
 		}
 		
 	}

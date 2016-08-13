@@ -76,11 +76,11 @@ public class ControlMenu extends JFrame implements ActionListener {
 		
 		jb1=new JButton("学生管理");
 		jb1.addActionListener(this);
-		jb2=new JButton("班级管理");
+		jb2=new JButton("部门管理");
 		jb2.addActionListener(this);
 		jb3=new JButton("财务管理");
 		jb3.addActionListener(this);
-		jb4=new JButton("家长查询");
+		jb4=new JButton("缺勤查询");
 		jb4.addActionListener(this);
 		
 		this.setLayout(null);
@@ -122,33 +122,27 @@ public class ControlMenu extends JFrame implements ActionListener {
 	
 
 	public static void main(String[] args) {
-		ControlMenu CCM=new ControlMenu("1005","管理员");
+		ControlMenu CCM=new ControlMenu("jumpfly","管理员");
 
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==jb1){
-			if(!UserType.equals("管理员"))
-				JOptionPane.showMessageDialog(this, UserType+"无此权限！");
-			else{
-				 test1=new StuMenu();
-			}
+			
+				 test1=new StuMenu(UserType);
+			
 			
 		}
 		if(e.getSource()==jb2){
-			if(!UserType.equals("管理员"))
-				JOptionPane.showMessageDialog(this, UserType+"无此权限！");
-			else{
-				test2=new RoomMenu();
-			}	
+			
+				test2=new RoomMenu(UserType);
+				
 		}
 		if(e.getSource()==jb3){
-			if(!UserType.equals("管理员"))
-				JOptionPane.showMessageDialog(this, UserType+"无此权限！");
-			else{
+			
 				FM=new FeeMenu(UserType);
-			}
+			
 		}
 		if(e.getSource()==jb4){
 			test4=new AbsenceMenu(UserType);

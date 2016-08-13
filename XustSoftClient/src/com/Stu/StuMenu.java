@@ -41,7 +41,7 @@ public class StuMenu extends JFrame implements ActionListener{
 		String [] UserPosts=null;
 		StuAddDiaLog stuAddDiaLog=null;
 		UserUPMsg  uum;
-	//	StuUpDiaLog uud=null;
+		String UserType;
 		
 		
 		public String[] ReturnUserPosts(){
@@ -92,13 +92,13 @@ public class StuMenu extends JFrame implements ActionListener{
 		}	
 		
 	public static void main(String[] args) {
-		StuMenu test2=new StuMenu();
+		StuMenu test2=new StuMenu("管理员");
 
 	}
 	
-	public StuMenu(){
+	public StuMenu(String UserType){
 		
-	
+		this.UserType=UserType;
 		CheckIn=new JButton("考勤录入");
 		CheckIn.addActionListener(this);
 		EnterIn=new JButton("档案录入");
@@ -144,6 +144,15 @@ public class StuMenu extends JFrame implements ActionListener{
 		jsp=new JScrollPane(jtb);
 		
 		
+		if(!UserType.equals("管理员")){
+			CheckIn.setEnabled(false);
+			EnterIn.setEnabled(false);
+			jb3.setEnabled(false);
+			jb4.setEnabled(false);
+			MsgFileGetIn.setEnabled(false);
+			MsgFileGetOut.setEnabled(false);
+		}
+		
 		this.add(jsp);
 		this.add(jp1,"North");
 		this.add(jp2,"South");
@@ -168,7 +177,7 @@ public class StuMenu extends JFrame implements ActionListener{
 		
 		
 		if(e.getSource()==CheckIn){
-			AbsenceMenu test=new AbsenceMenu("校长助理");
+			AbsenceMenu test=new AbsenceMenu(UserType);
 			
 		}else if(e.getSource()==EnterIn){
 		 stuAddDiaLog=new StuAddDiaLog(this, "档案录入", true);
@@ -191,22 +200,31 @@ public class StuMenu extends JFrame implements ActionListener{
 			if(UserNum.equals("")){
 				  sql ="select * from DetailMsg";
 				  UMM.queryUser(sql,this.TableParas,DBTable);
+				  jtb.setModel(UMM);//获取新的数据模型 
 			}else{
-			 sql="select * from DetailMsg where UserNum="+UserNum;
-			 
-			  UMM.queryUser(sql,this.TableParas,DBTable);
-			}
-		
-			jtb.setModel(UMM);//获取新的数据模型 
+			 sql="select * from DetailMsg where UserNum='"+UserNum+"'";
+			
+			 SqlHelper sqlhelp=SqlHelper.getInstance();
+				String[] UserNums={UserNum};
+				 if(sqlhelp.CheckExist(UserNums, "AbsenceTable_Up")){
+					 UMM.queryUser(sql,this.TableParas,DBTable);
+					 jtb.setModel(UMM);//获取新的数据模型 
+				 }
+				 else
+					 JOptionPane.showMessageDialog(this, "无该学号记录！");
+				 
+			}	 
+			
 		}
 		
 		if(e.getSource()==jb3){
 			int rowNum=this.jtb.getSelectedRow();
-			String UserID=(String)UMM.getValueAt(rowNum, 0);
+			
 			if(rowNum==-1){
 				JOptionPane.showMessageDialog(this, "请选中一行");
 			    return;
 			}
+			String UserID=(String)UMM.getValueAt(rowNum, 0);
 		//	uud=new StuUpDiaLog(this, "修改用户数据", true, UMM, rowNum);
 			uum=new UserUPMsg(this, true, UserID);
 				UMM=new UserMsgModel();
@@ -224,7 +242,7 @@ public class StuMenu extends JFrame implements ActionListener{
 			    return;
 			}
 			//转换成String 传入进model
-			String ID=(String)UMM.getValueAt(rowNum, 0);
+			String UserNum=(String)UMM.getValueAt(rowNum, 0);
 			//获得选中的这行的 第一个字段（列）
 			/*
 			 * 弹出窗口确认是否要删除
@@ -232,8 +250,8 @@ public class StuMenu extends JFrame implements ActionListener{
 			int	res=JOptionPane.showConfirmDialog(null, 
 					"是否打算删除？", "请选择..", JOptionPane.YES_NO_OPTION);
 					if(res==JOptionPane.YES_OPTION){
-						String sql ="delete from Student where UserID=?";
-						String[] paras={ID};
+						String sql ="delete from DetailMsg where UserNum=?";
+						String[] paras={UserNum};
 						UserMsgModel temp=new UserMsgModel();
 						if(temp.EditUser(sql,paras,"delete")){
 							JOptionPane.showMessageDialog(this, "删除成功！请刷新");
@@ -241,8 +259,6 @@ public class StuMenu extends JFrame implements ActionListener{
 							JOptionPane.showMessageDialog(this, "删除失败！");
 								
 						}
-						
-						
 						UMM=new UserMsgModel();
 						 String sql2 ="select * from DetailMsg";
 						  UMM.queryUser(sql2,this.TableParas,DBTable);

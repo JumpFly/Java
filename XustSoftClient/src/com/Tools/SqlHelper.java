@@ -122,10 +122,19 @@ public class SqlHelper {
 					b=true;
 				}
 				break;
-
+			case "DetailTable_Up":
+				//检测是否有该学号的记录情况
+				sql="select * from DetailMsg where UserNum="+"'"+IDs[0]+"'";
+				ps=ct.prepareStatement(sql);
+				rs=ps.executeQuery();
+				if(rs.next()){
+					System.out.println("Exist");
+					b=true;
+				}
+				break;
 			case "AbsenceTable":
 			
-				sql="select * from Absence where UserID="+"'"+IDs[0]+"'"+"and UserDate="+"'"+IDs[1]+"'";
+				sql="select * from Absence where UserNum="+"'"+IDs[0]+"'"+"and UserDate="+"'"+IDs[1]+"'";
 				ps=ct.prepareStatement(sql);
 				rs=ps.executeQuery();
 				if(rs.next()){
@@ -135,7 +144,7 @@ public class SqlHelper {
 				break;
 			case "AbsenceTable_Up":
 				//检测是否有该学号的缺勤情况
-				sql="select * from Absence where UserID="+"'"+IDs[0]+"'";
+				sql="select * from Absence where UserNum="+"'"+IDs[0]+"'";
 				ps=ct.prepareStatement(sql);
 				rs=ps.executeQuery();
 				if(rs.next()){
@@ -154,8 +163,8 @@ public class SqlHelper {
 				}
 				break;
 
-			case "ClassTable":
-				sql="select * from Class where ClassID="+"'"+IDs[0]+"'";
+			case "XustPostTable":
+				sql="select * from XustPost where UserPost="+"'"+IDs[0]+"'";
 				ps=ct.prepareStatement(sql);
 				rs=ps.executeQuery();
 				if(rs.next()){
@@ -215,10 +224,16 @@ public class SqlHelper {
 				for(int i=0;i<paras.length;i++){
 					ps.setString(i+1, paras[i]);
 				}break;
-			case "ClassTable":
-				for(int i=0;i<paras.length;i++){
-					ps.setString(i+1, paras[i]);
-				}break;
+//			case "XustPostTable":
+//				for(int i=0;i<paras.length;i++){
+//					ps.setString(i+1, paras[i]);
+//				}break;
+			case "XustPostTable":
+				
+					ps.setString(1, paras[0]);
+					int Num=Integer.parseInt(paras[1]);
+					ps.setInt(2, Num);
+				break;
 			case "StuTable"://添加新信息
 				for(int i=0;i<paras.length;i++){
 					if(i==3){

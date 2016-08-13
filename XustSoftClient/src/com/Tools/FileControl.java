@@ -35,8 +35,8 @@ public class FileControl {
 		case "PersonTable":
 			Table="Person";
 			break;
-		case "ClassTable":
-			Table="Class";
+		case "XustPostTable":
+			Table="XustPost";
 			break;
 		case "StuTable":
 			Table="Student";
@@ -56,7 +56,7 @@ public class FileControl {
 		case "AbsenceTable":
 			sql="insert into Absence values(?,?,?)";
 			break;
-		case "PersonTable":
+	/*	case "PersonTable":
 			sql="insert into Fee values(?,?,?,?,?,?,?,?,?)";
 			break;
 		case "ClassTable":
@@ -65,7 +65,7 @@ public class FileControl {
 		case "StuTable":
 			sql="insert into Student values(?,?,?,?,?,?)";
 			break;
-
+*/
 		default:
 			break;
 		}

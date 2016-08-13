@@ -20,34 +20,35 @@ import com.Tools.SqlHelper;
 import com.User.UserMsgModel;
 
 public class RoomMenu extends JFrame implements ActionListener{
-	FileControl FileCon=null;
-	ResultSet rs=null;
-	JPanel jp;
-	JButton Add,Delete,update;//新增、删除、刷新
-	JButton MsgFileGetIn,MsgFileGetOut;
-	JTable jtb=null;
-	JScrollPane jsp=null;
+	private FileControl FileCon=null;
+	private ResultSet rs=null;
+	private JPanel jp;
+	private JButton Add,Delete,update;//新增、删除、刷新
+	private JButton MsgFileGetIn,MsgFileGetOut;
+	private JTable jtb=null;
+	private JScrollPane jsp=null;
 	
-	JPanel jp1,jp2;
-	JLabel jl;
-	JButton jb1,jb2;
-	JTextField jtf;
+	private JPanel jp1,jp2;
+	private JLabel jl;
+	private JButton jb1,jb2;
+	private JTextField jtf;
 	
-	UserMsgModel UMM;
-	DBMsg 	dbMsg=new DBMsg();
+	private UserMsgModel UMM;
+	private DBMsg 	dbMsg=new DBMsg();
 	
-	String DBTable="ClassTable";
-	String []TableParas=dbMsg.ClassTable;
-	ClassAddDiaLog CAd=null;
-
-	public  String[] ReturnClassIDs(){
-		String ClassIDs="";
-		SqlHelper sqlhelp=SqlHelper.getInstance();
+	private String DBTable="XustPostTable";
+	private String []TableParas=dbMsg.XustPostTable;
+	private PostAddDiaLog CAd=null;
+	private String[]	XustPosts;
+	private String	UserType;
+	public String[] ReturnUserPosts(){
+		String UserPost="";
+		SqlHelper sqlhelp= SqlHelper.getInstance();
 		try {
-			String sql="select ClassID from Class";
+			String sql="select UserPost from XustPost";
 			rs=sqlhelp.queryExecute(sql);
 			while(rs.next()){
-				ClassIDs+=rs.getString(1)+" ";
+				UserPost+=rs.getString(1)+" ";
 			}
 			
 		} catch (Exception e) {
@@ -55,18 +56,18 @@ public class RoomMenu extends JFrame implements ActionListener{
 		} finally {
 			sqlhelp.DBclose();
 		}
-		return ClassIDs.split(" ");
+		return UserPost.split(" ");
 	}
 	
 	
 	public  void UpdataClassMSG(){
 		String sql="",sql2="";
 		SqlHelper sqlhelp=SqlHelper.getInstance();
-		String[]	ClassIDs=ReturnClassIDs();
+		XustPosts=ReturnUserPosts();
 	
-		for (int i = 0; i < ClassIDs.length; i++) {
+		for (int i = 0; i < XustPosts.length; i++) {
 			int NUM=0;
-			sql="select *from Student where ClassID="+"'"+ClassIDs[i]+"'";
+			sql="select *from DetailMsg where UserPost="+"'"+XustPosts[i]+"'";
 			try {
 				rs=sqlhelp.queryExecute(sql);
 				while(rs.next()){
@@ -77,7 +78,7 @@ public class RoomMenu extends JFrame implements ActionListener{
 			}finally {
 				sqlhelp.DBclose();
 			}
-			sql2="update Class set PersonNum="+"'"+NUM+"'"+" where ClassID="+"'"+ClassIDs[i]+"'";
+			sql2="update XustPost set PersonNum="+"'"+NUM+"'"+" where UserPost="+"'"+XustPosts[i]+"'";
 				try {
 				sqlhelp.queryExe(sql2);
 			} catch (Exception e2) {
@@ -87,7 +88,8 @@ public class RoomMenu extends JFrame implements ActionListener{
 			}
 		}
 	}
-	public RoomMenu(){
+	public RoomMenu(String UserType){
+		this.UserType=UserType;
 		UpdataClassMSG();
 		Add=new JButton("新增");
 		Add.addActionListener(this);
@@ -104,7 +106,7 @@ public class RoomMenu extends JFrame implements ActionListener{
 		MsgFileGetIn.addActionListener(this);
 		MsgFileGetOut=new JButton("导出");
 		MsgFileGetOut.addActionListener(this);
-		jl=new JLabel("请输入班号");
+		jl=new JLabel("请输入部门");
 		jp1.add(MsgFileGetIn);
 		jp1.add(jl);
 		jp1.add(jtf);
@@ -122,12 +124,19 @@ public class RoomMenu extends JFrame implements ActionListener{
 		
 		//创建数据模型对象
 		  UMM=new UserMsgModel();
-		  String sql ="select * from Class";
+		  String sql ="select * from XustPost";
 		  UMM.queryUser(sql,this.TableParas,DBTable);
 		
 		jtb=new JTable(UMM);//把模型加入到JTable
 		
 		jsp=new JScrollPane(jtb);
+		
+		if(!UserType.equals("管理员")){
+			Add.setEnabled(false);
+			Delete.setEnabled(false);
+			MsgFileGetIn.setEnabled(false);
+			MsgFileGetOut.setEnabled(false);
+		}
 		
 		
 		this.add(jsp);
@@ -141,7 +150,7 @@ public class RoomMenu extends JFrame implements ActionListener{
 	}
 	
 	public static void main(String[] args) {
-		new RoomMenu();
+		new RoomMenu("管理员");
 
 	}
 
@@ -158,7 +167,7 @@ public class RoomMenu extends JFrame implements ActionListener{
 		}
 		
 		if(e.getSource()==Add){
-			CAd=new ClassAddDiaLog(this, "新建班级", false);
+			CAd=new PostAddDiaLog(this, "新建部门", false);
 			
 			
 		}else if(e.getSource()==Delete){
@@ -169,13 +178,13 @@ public class RoomMenu extends JFrame implements ActionListener{
 			    return;
 			}
 			//转换成String 传入进model
-			String ID=(String)UMM.getValueAt(rowNum, 0);
+			String UserPost=(String)UMM.getValueAt(rowNum, 0);
 			
 			int	res=JOptionPane.showConfirmDialog(null, 
 					"是否打算删除？", "请选择..", JOptionPane.YES_NO_OPTION);
 					if(res==JOptionPane.YES_OPTION){
-						String sql ="delete from Class where ClassID=?";
-						String[] paras={ID};
+						String sql ="delete from XustPost where UserPost=?";
+						String[] paras={UserPost};
 						UserMsgModel temp=new UserMsgModel();
 						if(temp.EditUser(sql,paras,"delete")){
 							JOptionPane.showMessageDialog(this, "删除成功！");
@@ -185,7 +194,7 @@ public class RoomMenu extends JFrame implements ActionListener{
 						}
 						
 						UMM=new UserMsgModel();
-						 String sql2 ="select * from Class";
+						 String sql2 ="select * from XustPost";
 						  UMM.queryUser(sql2,this.TableParas,DBTable);
 						jtb.setModel(UMM);//获取新的数据模型 
 						
@@ -198,27 +207,35 @@ public class RoomMenu extends JFrame implements ActionListener{
 			UpdataClassMSG();
 			
 			UMM=new UserMsgModel();
-			 String sql3 ="select * from Class";
+			 String sql3 ="select * from XustPost";
 			  UMM.queryUser(sql3,this.TableParas,DBTable);
 			jtb.setModel(UMM);//获取新的数据模型 		
 		}
 		if(e.getSource()==jb1){
-			String ID =jtf.getText();
+			String UserPost =jtf.getText();
 			String sql;
 			 UMM=new UserMsgModel();
-			if(ID.equals("")){
-				  sql ="select * from Class";
+			if(UserPost.equals("")){
+				  sql ="select * from XustPost";
 				  UMM.queryUser(sql,this.TableParas,DBTable);
+				  jtb.setModel(UMM);//获取新的数据模型 
 			}else{
-			 sql="select * from Class where ClassID="+ID;
+			 sql="select * from XustPost where UserPost='"+UserPost+"'";
 			 /*
-			  * 有空最好改善一下交互，若查找的ID不存在则给出提示。
+			  * 改善交互，若查找的ID不存在则给出提示。
 			  * */
-			 
-			  UMM.queryUser(sql,this.TableParas,DBTable);
+			 SqlHelper sqlhelp=SqlHelper.getInstance();
+				String[] UserPosts={UserPost};
+				 if(sqlhelp.CheckExist(UserPosts, "XustPostTable")){
+					 UMM.queryUser(sql,this.TableParas,DBTable);
+					 jtb.setModel(UMM);//获取新的数据模型 
+				 }
+				 else
+					 JOptionPane.showMessageDialog(this, "无该部门记录！");
+				 
 			}
 		
-			jtb.setModel(UMM);//获取新的数据模型 
+			
 		}
 		
 	}
