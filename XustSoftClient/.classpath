@@ -9,5 +9,7 @@
 	<classpathentry kind="lib" path="D:/java/sqlserver 链接包/sqljdbc4.jar"/>
 	<classpathentry kind="lib" path="G:/JavaTools/Java/lib/ext/activation.jar"/>
 	<classpathentry kind="lib" path="G:/JavaTools/Java/lib/ext/javax.mail.jar"/>
+	<classpathentry kind="lib" path="commons-codec-1.10.jar"/>
+	<classpathentry kind="lib" path="D:/java/commons-codec-1.10/commons-codec-1.10.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

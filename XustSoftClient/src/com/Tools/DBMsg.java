@@ -46,15 +46,7 @@ public class DBMsg {
 				hang.add(stt==null?"":stt.trim());
 				rowData.add(hang);
 			}break;
-//		case "PersonTable":
-//			while(rs.next()){
-//				Vector hang=new Vector();
-//				hang.add(rs.getString(1));
-//				hang.add("********");
-//				hang.add(rs.getString(3));
-//				hang.add(rs.getString(4));
-//				rowData.add(hang);
-//			}break;
+
 		default:
 			break;
 		}

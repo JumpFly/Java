@@ -152,17 +152,7 @@ public class SqlHelper {
 					b=true;
 				}
 				break;
-			case "FeeTable":
-				
-				sql="select * from Fee where UserID="+"'"+IDs[0]+"'"+"and Month="+"'"+IDs[1]+"'";
-				ps=ct.prepareStatement(sql);
-				rs=ps.executeQuery();
-				if(rs.next()){
-					System.out.println("Exist");
-					b=true;
-				}
-				break;
-
+		
 			case "XustPostTable":
 				sql="select * from XustPost where UserPost="+"'"+IDs[0]+"'";
 				ps=ct.prepareStatement(sql);
@@ -204,17 +194,7 @@ public class SqlHelper {
 			ps=ct.prepareStatement(sql);
 			
 			switch (DBTable) {
-			
-			case "FeeTable_Up":
-				for(int i=0;i<paras.length;i++){
-					if(i==0)
-					ps.setFloat(i+1, Float.parseFloat(paras[i]));
-					if(i==1)
-						ps.setString(i+1, paras[i]);
-					if(i==2)
-						ps.setInt(i+1,Integer.parseInt(paras[i]));		
-				}break;
-			
+		
 			case "PersonTable":
 				for(int i=0;i<paras.length;i++){
 					ps.setString(i+1, paras[i]);
@@ -234,15 +214,7 @@ public class SqlHelper {
 					int Num=Integer.parseInt(paras[1]);
 					ps.setInt(2, Num);
 				break;
-			case "StuTable"://添加新信息
-				for(int i=0;i<paras.length;i++){
-					if(i==3){
-						int Age=Integer.parseInt(paras[i]);
-						ps.setInt(i+1, Age);
-					}else 	{
-						ps.setString(i+1, paras[i]);
-					}
-				}break;
+		
 			case "DetailMsg_Up"://修改信息
 				for(int i=0;i<paras.length;i++){
 						ps.setString(i+1, paras[i]);

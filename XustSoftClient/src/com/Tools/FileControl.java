@@ -38,10 +38,7 @@ public class FileControl {
 		case "XustPostTable":
 			Table="XustPost";
 			break;
-		case "StuTable":
-			Table="Student";
-			break;
-
+		
 		default:
 			break;
 		}
@@ -90,15 +87,7 @@ public class FileControl {
 					stt=rs.getString(i+1);
 					msString+=(stt==null||stt.equals(""))?"null ":(stt.trim()+" ");
 				}
-//				msString+=rs.getString(1).trim()+" ";
-//				msString+=rs.getString(2).trim()+" ";
-//				msString+=rs.getString(3).trim()+" ";
-//				msString+=rs.getString(4).trim()+" ";
-//				msString+=rs.getString(5).trim()+" ";
-//				msString+=rs.getString(6).trim()+" ";
-//				msString+=rs.getString(7).trim()+" ";
-//				msString+=rs.getString(8).trim()+" ";
-//				msString+=rs.getString(9);
+
 				MsgData.add(msString);
 			}break;
 		case "AbsenceTable":
