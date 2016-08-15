@@ -12,17 +12,17 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 public class FileControl {
-	ResultSet rs=null;
-	JFileChooser Fch1;
-	FileWriter fw=null;
-	BufferedWriter bw=null;
-	FileReader fr=null;
-	BufferedReader br=null;
-	String filename;
-	SqlHelper sqlhelp=null;
-	String[] Msg=null;
-	MessagePone mPone=null;
-	Vector<String>	MsgData=new Vector();
+	private ResultSet rs=null;
+	private JFileChooser Fch1;
+	private FileWriter fw=null;
+	private BufferedWriter bw=null;
+	private FileReader fr=null;
+	private BufferedReader br=null;
+	private String filename;
+	private SqlHelper sqlhelp=null;
+	private String[] Msg=null;
+	private MessagePone mPone=null;
+	private Vector<String>	MsgData=new Vector();
 	public String TransName(String DBTable){
 		String Table="";
 		switch (DBTable) {
@@ -76,18 +76,6 @@ public class FileControl {
 		MsgData.clear();
 		try {
 		switch (DBTable) {
-		case "StuTable":
-			while(rs.next()){
-			String msString="";
-			msString+=rs.getString(1).trim()+" ";
-			msString+=rs.getString(2).trim()+" ";
-			msString+=rs.getString(3).trim()+" ";
-			msString+=rs.getInt(4)+" ";
-			msString+=rs.getString(5).trim()+" ";
-			msString+=rs.getString(6).trim();
-			MsgData.add(msString);
-		}break;
-		
 		case "XustPostTable":
 			while(rs.next()){
 				String msString="";

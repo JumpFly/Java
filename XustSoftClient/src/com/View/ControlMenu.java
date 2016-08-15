@@ -18,26 +18,24 @@ import javax.swing.JTextField;
 
 import com.Room.RoomMenu;
 import com.Absence.*;
-import com.Fee.FeeMenu;
 public class ControlMenu extends JFrame implements ActionListener {
 
-	JPanel panel1=null;
-	String UserID,UserType;
-	Date NowDate;
-	String FormDate;
-	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	Calendar ca=Calendar.getInstance();//初始化日历
-	int month; // get的0-11 代表1-12月
+	private JPanel panel1=null;
+	private String UserID,UserType;
+	private Date NowDate;
+	private String FormDate;
+	private SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private Calendar ca=Calendar.getInstance();//初始化日历
+	private int month; // get的0-11 代表1-12月
 	
-	JLabel Photo=null,BG=null;
-	JLabel ID,Type,LDate=new JLabel();
-	JButton jb1,jb2,jb3,jb4;
-	Font myFont=null;
+	private JLabel Photo=null,BG=null;
+	private JLabel ID,Type,LDate=new JLabel();
+	private JButton jb1,jb2,jb3,jb4;
+	private Font myFont=null;
 	
-	StuMenu test1=null;
-	RoomMenu test2=null;
-	FeeMenu FM=null;
-	AbsenceMenu test4=null;
+	private StuMenu test1=null;
+	private RoomMenu test2=null;
+	private AbsenceMenu test4=null;
 	
 	public String getTime(){
 		ca=Calendar.getInstance();
@@ -74,11 +72,11 @@ public class ControlMenu extends JFrame implements ActionListener {
 		LDate.setFont(myFont); 
 		LDate.setForeground(Color.blue);
 		
-		jb1=new JButton("学生管理");
+		jb1=new JButton("资讯中心");
 		jb1.addActionListener(this);
-		jb2=new JButton("部门管理");
+		jb2=new JButton("学生管理");
 		jb2.addActionListener(this);
-		jb3=new JButton("财务管理");
+		jb3=new JButton("部门管理");
 		jb3.addActionListener(this);
 		jb4=new JButton("缺勤查询");
 		jb4.addActionListener(this);
@@ -130,18 +128,18 @@ public class ControlMenu extends JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==jb1){
 			
-				 test1=new StuMenu(UserType);
+				
 			
 			
 		}
 		if(e.getSource()==jb2){
 			
-				test2=new RoomMenu(UserType);
+			 test1=new StuMenu(UserType);
 				
 		}
 		if(e.getSource()==jb3){
 			
-				FM=new FeeMenu(UserType);
+			test2=new RoomMenu(UserType);
 			
 		}
 		if(e.getSource()==jb4){

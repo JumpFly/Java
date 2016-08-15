@@ -20,21 +20,21 @@ import javax.swing.JTextField;
 
 import com.Tools.*;
 public class StuMenu extends JFrame implements ActionListener{
-		ResultSet rs=null;
-		FileControl FileCon=null;
-		JPanel jp;
-		JButton CheckIn,EnterIn,update;//考勤录入、档案录入	
-		JButton MsgFileGetIn,MsgFileGetOut;
-		JTable jtb=null;
-		JScrollPane jsp=null;
+	private ResultSet rs=null;
+	private FileControl FileCon=null;
+	private JPanel jp;
+	private JButton CheckIn,EnterIn,update;//考勤录入、档案录入	
+	private JButton MsgFileGetIn,MsgFileGetOut;
+	private JTable jtb=null;
+	private JScrollPane jsp=null;
 		
-		JPanel jp1,jp2;
-		JLabel jl;
-		JButton jb1,jb2,jb3,jb4;
-		JTextField jtf;
+	private JPanel jp1,jp2;
+	private JLabel jl;
+	private JButton jb1,jb2,jb3,jb4;
+	private JTextField jtf;
 		
-		UserMsgModel UMM;
-		DBMsg 	dbMsg=new DBMsg();
+	private UserMsgModel UMM;
+	private DBMsg 	dbMsg=new DBMsg();
 		
 		String DBTable="DetailTable";
 		String []TableParas=dbMsg.DetailMsgTable;

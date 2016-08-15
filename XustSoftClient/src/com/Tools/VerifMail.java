@@ -14,7 +14,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 public class VerifMail {
-	 String ToAdress,ToText;
+	private String ToAdress,ToText;
 	
 	static final String smtpHost="mail.smtp.host";
 	static final String FromHost="smtp.sina.cn";
@@ -23,11 +23,11 @@ public class VerifMail {
 	static final String ToSubject="XustSoft VerifyMail";
 	
 	
-	String Verify=null;
-	Transport transport=null;
-	Address address=null,toAddress=null;
-	MimeMessage message=null;
-	Session session=null;
+	private String Verify=null;
+	private Transport transport=null;
+	private Address address=null,toAddress=null;
+	private MimeMessage message=null;
+	private Session session=null;
 	public VerifMail(String ToAdress){
 		this.ToAdress=ToAdress;
 		CreateVerifty();

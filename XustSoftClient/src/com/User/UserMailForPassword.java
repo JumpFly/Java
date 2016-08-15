@@ -27,26 +27,24 @@ import javax.swing.SwingWorker;
 import com.Tools.*;
 public class UserMailForPassword extends JDialog implements ActionListener{
 
-	JLabel jl[] =new JLabel[5];
-	JLabel Tip=null;
-	JTextField jtf1,jtf2,jtf3,jtf4;
-	String newPass="",tempstt="";
-//	MyNewpassWorker NewpassWorker=null;
-	//JPasswordField Newpassword;
-	JButton GetVerif,Choose,Cancel;//确认、取消
-	JComboBox DownList=null;
-	 JScrollPane jsp;
-	 JPanel jp1,jp2,jp3;
-	 String strs[]={"用户账号","新密码","用户邮箱","用户类型","验证码"};
-	String [] Type={"非会员","管理员","会员"};
-	VerifMail vmMail=null;//发送验证码邮件
-	String verify;//验证码
-	SqlHelper sqlhelp=SqlHelper.getInstance();
-	ResultSet rs=null;
+	private JLabel jl[] =new JLabel[5];
+	private JLabel Tip=null;
+	private JTextField jtf1,jtf2,jtf3,jtf4;
+	private String newPass="",tempstt="";
+	private JButton GetVerif,Choose,Cancel;//确认、取消
+	private JComboBox DownList=null;
+	private JScrollPane jsp;
+	private JPanel jp1,jp2,jp3;
+	private String strs[]={"用户账号","新密码","用户邮箱","用户类型","验证码"};
+	private String [] Type={"非会员","管理员","会员"};
+	private VerifMail vmMail=null;//发送验证码邮件
+	private String verify;//验证码
+	private SqlHelper sqlhelp=SqlHelper.getInstance();
+	private ResultSet rs=null;
 	
-	String UserID=null;
-	String UserMail=null;
-	String UserType=null;
+	private String UserID=null;
+	private String UserMail=null;
+	private String UserType=null;
 	
 	private class MySwingWorker extends SwingWorker<Void, Void>{
 		private byte Count=60;

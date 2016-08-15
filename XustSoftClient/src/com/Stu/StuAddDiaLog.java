@@ -21,17 +21,17 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import com.Tools.*;
 public class StuAddDiaLog extends JDialog implements ActionListener{
-	ResultSet rs=null;
-	String [] UserPosts=null;	
-	JButton Choose,Cancel,ResBtn;//确认、取消、重置
-	 JPanel jp1,jp2,jp3;
-	String DetailMsgTable[]= DBMsg.DetailMsgTable;
-	JLabel jl[] =new JLabel[DetailMsgTable.length+1];
-	JTextField jtf[]=new JTextField[DetailMsgTable.length+1];
-	Font myFont=null;
-	Date NowDate;
-	String FormDate;
-	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+	private ResultSet rs=null;
+	private String [] UserPosts=null;	
+	private JButton Choose,Cancel,ResBtn;//确认、取消、重置
+	private JPanel jp1,jp2,jp3;
+	private String DetailMsgTable[]= DBMsg.DetailMsgTable;
+	private JLabel jl[] =new JLabel[DetailMsgTable.length+1];
+	private JTextField jtf[]=new JTextField[DetailMsgTable.length+1];
+	private Font myFont=null;
+	private Date NowDate;
+	private String FormDate;
+	private SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
 	
 	
 	

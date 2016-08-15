@@ -10,13 +10,13 @@ import java.util.Vector;
 public class SqlHelper {
 
 	//操作数据库所需：
-	PreparedStatement ps=null;
-	Connection ct=null;
-	ResultSet rs=null;
-	String url="jdbc:microsoft:sqlserver://127.0.0.1:1433;databaseName=XustDB";
-	String DBuser="sa";
-	String DBpass="wei1995922";
-	String driver ="com.microsoft.jdbc.sqlserver.SQLServerDriver";
+	private PreparedStatement ps=null;
+	private Connection ct=null;
+	private ResultSet rs=null;
+	private String url="jdbc:microsoft:sqlserver://127.0.0.1:1433;databaseName=XustDB";
+	private String DBuser="sa";
+	private String DBpass="wei1995922";
+	private String driver ="com.microsoft.jdbc.sqlserver.SQLServerDriver";
 	
 	
 	 private static SqlHelper instance=null;

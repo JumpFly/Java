@@ -1,12 +1,5 @@
 package com.View;
-/*
- * 网络工程1402 陈志威
- * 项目起始于2016.7.2
- * 项目完成于2016.7.4
- * 耗时3天
- * 挂接sql server2008R2
- * 
- * */
+
 import com.User.*; 
 import java.awt.Color;
 import java.awt.Font;
@@ -29,18 +22,18 @@ import com.Tools.*;
 
 public class LoginView extends JFrame implements ActionListener{
 	
-	ResultSet rs=null;
-	UserAddDiaLog AddDialog=null;
-	UserMailForPassword FindPassword=null;
-	JLabel BG=null; //设置背景图
-	JLabel UserID,Pass,UserType;
-	JButton jb1,jb2,jb3;//登录注册 忘记密码
-	JTextField jtf_ID=null;
-	JPasswordField jpf_pass=null;
-	JPanel myJPanel,myJPanel2;
-	String [] Type={"非会员","管理员","会员"};
-	JComboBox DownList=null;	
-	Font myFont=null;
+	private ResultSet rs=null;
+	private UserAddDiaLog AddDialog=null;
+	private UserMailForPassword FindPassword=null;
+	private JLabel BG=null; //设置背景图
+	private JLabel UserID,Pass,UserType;
+	private JButton jb1,jb2,jb3;//登录注册 忘记密码
+	private JTextField jtf_ID=null;
+	private JPasswordField jpf_pass=null;
+	private JPanel myJPanel,myJPanel2;
+	private String [] Type={"非会员","管理员","会员"};
+	private JComboBox DownList=null;	
+	private Font myFont=null;
 	
 	public LoginView(){
 

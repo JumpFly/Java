@@ -22,13 +22,13 @@ import javax.swing.JTextField;
 import com.Tools.*;
 public class PostAddDiaLog extends JDialog implements ActionListener{
 
-	JLabel jl[] =new JLabel[2];
-	JTextField jtf1,jtf2;
-	JButton Choose,Cancel;//确认、取消
-	 JScrollPane jsp;
-	 JPanel jp1,jp2,jp3;
-	 String[] XustPostTable =DBMsg.XustPostTable;
-		Font myFont=null;
+	private  JLabel jl[] =new JLabel[2];
+	private  JTextField jtf1,jtf2;
+	private  JButton Choose,Cancel;//确认、取消
+	private  JScrollPane jsp;
+	private  JPanel jp1,jp2,jp3;
+	private  String[] XustPostTable =DBMsg.XustPostTable;
+	private  Font myFont=null;
 		
 	public static void main(String[] args) {
 		PostAddDiaLog ua=new PostAddDiaLog(null,"123",false);

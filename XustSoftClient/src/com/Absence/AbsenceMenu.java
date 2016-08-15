@@ -20,23 +20,23 @@ import com.User.UserMsgModel;
 
 public class AbsenceMenu extends JFrame implements ActionListener{
 
-	FileControl FileCon=null;
-	JPanel jp;
-	JButton Add,Delete,update;//新增、删除、刷新
-	JButton MsgFileGetIn,MsgFileGetOut;
-	JTable jtb=null;
-	JScrollPane jsp=null;
+	private FileControl FileCon=null;
+	private JPanel jp;
+	private JButton Add,Delete,update;//新增、删除、刷新
+	private JButton MsgFileGetIn,MsgFileGetOut;
+	private JTable jtb=null;
+	private JScrollPane jsp=null;
 	
-	JPanel jp1,jp2;
-	JLabel jl;
-	JButton jb1,jb2;
-	JTextField jtf;
+	private JPanel jp1,jp2;
+	private JLabel jl;
+	private JButton jb1,jb2;
+	private JTextField jtf;
 	
-	UserMsgModel UMM;
-	DBMsg 	dbMsg=new DBMsg();
-	String UserType;
-	String DBTable="AbsenceTable";
-	String []TableParas=dbMsg.AbsenceTable;
+	private UserMsgModel UMM;
+	private DBMsg 	dbMsg=new DBMsg();
+	private String UserType;
+	private String DBTable="AbsenceTable";
+	private String []TableParas=dbMsg.AbsenceTable;
 	public AbsenceMenu(String Type){
 		this.UserType=Type;
 		

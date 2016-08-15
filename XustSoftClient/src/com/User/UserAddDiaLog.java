@@ -23,15 +23,14 @@ import javax.swing.JTextField;
 import com.Tools.*;
 public class UserAddDiaLog extends JDialog implements ActionListener{
 
-	JLabel jl[] =new JLabel[6];
-	JTextField jtf1,jtf2,jtf3,jtf4,jtf5;
-	JButton Choose,Cancel;//确认、取消
-//	JList jlist; //列表框
-	JComboBox DownList=null;
-	 JScrollPane jsp;
-	 JPanel jp1,jp2,jp3;
-	 String strs[]={"用户账号","用户密码","用户类型","用户工号","用户邮箱","邀请码"};
-	String [] Type={"非会员","管理员","会员"};
+	private JLabel jl[] =new JLabel[6];
+	private JTextField jtf1,jtf2,jtf3,jtf4,jtf5;
+	private JButton Choose,Cancel;//确认、取消
+	private JComboBox DownList=null;
+	private JScrollPane jsp;
+	private JPanel jp1,jp2,jp3;
+	private String strs[]={"用户账号","用户密码","用户类型","用户工号","用户邮箱","邀请码"};
+	private String [] Type={"非会员","管理员","会员"};
 	
 	public static void main(String[] args) {
 		UserAddDiaLog ua=new UserAddDiaLog(null,"123",true);
@@ -59,9 +58,6 @@ public class UserAddDiaLog extends JDialog implements ActionListener{
 		jtf4=new JTextField();
 		jtf5=new JTextField();
 		DownList=new JComboBox(Type);
-		//jlist=new JList(Type);
-		//jlist.setVisibleRowCount(2);//设置滑动框显示多少行
-	//	jsp=new JScrollPane(jlist);
 		
 		jp2.add(jtf1);
 		jp2.add(jtf2);

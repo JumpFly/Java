@@ -24,16 +24,16 @@ import javax.swing.JTextField;
 import com.Tools.*;
 public class AbsenceDiaLog extends JDialog implements ActionListener{
 
-	JLabel jl[] =new JLabel[3];
-	JTextField jtf1,jtf2,jtf3;
-	JButton Choose,Cancel,ResBtn;//确认、取消
-	 JScrollPane jsp;
-	 JPanel jp1,jp2,jp3;
-	 String[] AbsenceTable =DBMsg.AbsenceTable;
-		Font myFont=null;
-		Date NowDate;
-		String FormDate;
-		SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+	private JLabel jl[] =new JLabel[3];
+	private JTextField jtf1,jtf2,jtf3;
+	private JButton Choose,Cancel,ResBtn;//确认、取消
+	private JScrollPane jsp;
+	private JPanel jp1,jp2,jp3;
+	private String[] AbsenceTable =DBMsg.AbsenceTable;
+	private Font myFont=null;
+	private Date NowDate;
+	private String FormDate;
+	private SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
 		
 	public static void main(String[] args) {
 		AbsenceDiaLog ua=new AbsenceDiaLog(null,"123",false);
