@@ -53,6 +53,8 @@ public class AESCoder {
 		Key K=toKey(key);
 		Cipher cipher=Cipher.getInstance(CIPHER_ALGORITHM);
 		cipher.init(Cipher.DECRYPT_MODE, K);
+		
+			
 		return cipher.doFinal(data);
 	}
 	public static byte[] decrypt(byte[] data,String key)throws Exception{

@@ -20,6 +20,7 @@ import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
 
 import com.Absence.AbsenceMenu;
 import com.Common.Msg;
@@ -295,22 +296,25 @@ public class StuMenu extends JFrame implements ActionListener{
 			
 		}
 		private void TransInfo(Vector rowData){
-			//用于将server传来的信息对称解密
+			//用于将server传来的信息对称解密,注意加密后的byte数组是不能强制转换成字符串的,所以用到Hex
 			for(Object V:rowData){
 				Vector hang=(Vector)V;
 				for(int i=0;i<hang.size();i++){
+					String stt=(String)hang.get(i);
 					byte[] Deinfo;
 					try {
-						Deinfo=AESCoder.decrypt(((String)hang.get(i)).getBytes(), SecretInfo.getKey());
-						String info=new String(Deinfo);
-						hang.set(i,info);
+						Deinfo=AESCoder.decrypt(Hex.decodeHex(stt.toCharArray()), SecretInfo.getKey());
+							String info=new String(Deinfo);
+							hang.set(i,info);
+			
+						
 						
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 					
 				}
-				publish(hang);
+		
 			}
 
 		}
@@ -321,21 +325,20 @@ public class StuMenu extends JFrame implements ActionListener{
 			tableMsg.setMsgType(Msg.StuMenuCallTable_MSG);
 			try {
 			
-//				if(MapHoldReceiveThread.IsEmpty())
-//					return null;
-//				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
-//				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
-				ObjectOutputStream oos=MapHoldReceiveThread.getOos();
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
 				oos.writeObject(tableMsg);
 				
-			//	ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
-				ObjectInputStream ois=MapHoldReceiveThread.getOis();
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
 				SecretMsg sMsg=(SecretMsg)ois.readObject();
 				
 				if(sMsg.getMsgType()==Msg.RespondStu_MSG){
 					this.columnNames=sMsg.getColumnNames();
-				//	this.rowData=sMsg.getEnrowData();
-					TransInfo(sMsg.getEnrowData());
+					this.rowData=sMsg.getEnrowData();
+					TransInfo(this.rowData);
+				
 					
 				}
 				
@@ -346,12 +349,12 @@ public class StuMenu extends JFrame implements ActionListener{
 			return null;
 		}
 		@Override
-		protected void process(List<Vector<String>> chunks) {
-	         for (Vector<String> chunk : chunks)
-	         { this.rowData.add(chunk);
-	            model.setDataVector(this.rowData , this.columnNames);
-	         }
+		protected void done() {
+			
+			super.done();
+			model.setDataVector(this.rowData , this.columnNames);
 		}
+
 	}
 	
 	
