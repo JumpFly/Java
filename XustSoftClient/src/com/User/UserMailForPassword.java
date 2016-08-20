@@ -5,6 +5,9 @@ import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -24,12 +27,20 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
+import com.Common.Msg;
+import com.Common.SecretMsg;
+import com.Model.MapHoldReceiveThread;
+import com.Secret.AESCoder;
+import com.Secret.CertificateCoder;
 import com.Tools.*;
 public class UserMailForPassword extends JDialog implements ActionListener{
 
 	private JLabel jl[] =new JLabel[5];
 	private JLabel Tip=null;
-	private JTextField jtf1,jtf2,jtf3,jtf4;
+	private JTextField jtf1,jtf3,jtf4;
+	private JPasswordField passwordField;
 	private String newPass="",tempstt="";
 	private JButton GetVerif,Choose,Cancel;//确认、取消
 	private JComboBox DownList=null;
@@ -45,23 +56,17 @@ public class UserMailForPassword extends JDialog implements ActionListener{
 	private String UserID=null;
 	private String UserMail=null;
 	private String UserType=null;
-	
+
 	private class MySwingWorker extends SwingWorker<Void, Void>{
 		private byte Count=60;
-		private boolean Flag =false;
-		public boolean GetFlag() {
-			return Flag;
-		}
 		
 		public MySwingWorker(){
 			
 		}
 		@Override
 		protected Void doInBackground() throws Exception {
-
-			 vmMail=new VerifMail(jtf3.getText().trim());
-			 verify=vmMail.getVerify();
-			  Flag=vmMail.SendMail();
+			 GetVerif.setEnabled(false);
+			
 			while(Count>=0)
 			{
 				 Thread.sleep(1000);
@@ -81,45 +86,7 @@ public class UserMailForPassword extends JDialog implements ActionListener{
 	
 		
 	}
-/*	
-	private class MyNewpassWorker extends SwingWorker<Void, Void>{
-		private boolean Flag =true;
-		public boolean GetFlag() {
-			return Flag;
-		}
-		public void SetFlag(boolean flag) {
-			 Flag=flag;
-		}
-		public MyNewpassWorker(){
-			
-		}
-		@Override
-		protected Void doInBackground() throws Exception {
-			while(Flag){
-				if(jtf2.getText()=="")
-					newPass="";
-					else{
-						tempstt=jtf2.getText().trim();
-						newPass+=tempstt.charAt(tempstt.length()-1);
-						String temp="";
-						for (int i = 0; i < tempstt.length(); i++) {
-							temp+="*";
-						}
-						jtf2.setText(temp);
-						System.out.println(newPass);
-					}
-			}
-			return null;
-		}
-		@Override
-		protected void done() {
-			
-			super.done();
-		}
-	
-		
-	}
-*/
+
 	
 	
 	public static void main(String[] args) {
@@ -143,16 +110,16 @@ public class UserMailForPassword extends JDialog implements ActionListener{
 			}
 		
 		jtf1=new JTextField();
-		jtf2=new JTextField();
-	//	Newpassword=new JPasswordField();
+		passwordField=new JPasswordField();
+
 		jtf3=new JTextField();
 		jtf4=new JTextField();
 		DownList=new JComboBox(Type);
 	
 		
 		jp2.add(jtf1);
-		jp2.add(jtf2);
-	//	jp2.add(Newpassword);
+		jp2.add(passwordField);
+
 		jp2.add(jtf3);
 		jp2.add(DownList);
 		jp2.add(jtf4);
@@ -177,8 +144,7 @@ public class UserMailForPassword extends JDialog implements ActionListener{
 		this.setSize(320,320);
 		this.setVisible(true);
 		this.setResizable(false);
-//		 NewpassWorker=new MyNewpassWorker();
-//		NewpassWorker.execute();
+
 		
 	}
 	
@@ -190,104 +156,175 @@ public class UserMailForPassword extends JDialog implements ActionListener{
 			 UserID=jtf1.getText().trim();
 			 UserMail=jtf3.getText().trim();
 			 UserType=(String)DownList.getSelectedItem();
-			try {
-				rs=sqlhelp.queryExec(UserID);
-				if(!rs.next()){
-					JOptionPane.showMessageDialog(this, "该账号不存在！");
-				}else {
-						
-					String	UType=rs.getString(3);
-					String	UMail=rs.getString(4);
-					if(UserMail.equals(UMail)&&UserType.equals(UType)){
-						 
-						 GetVerif.setEnabled(false);
-						 Choose.setEnabled(true);
-						 MySwingWorker swingWorker=new MySwingWorker();
-						 swingWorker.execute();
-						 boolean flag=swingWorker.GetFlag();
-						 if(flag==false){
-							 JOptionPane.showMessageDialog(this, "发送中途失败"); 
-						 }
-						 
-						 JOptionPane.showMessageDialog(this, "已发送至邮箱！"); 
-						
-					}else {
-						 JOptionPane.showMessageDialog(this, "信息填写有误！"); 
-					}
-				}
-			} catch (Exception e2) {
-				e2.printStackTrace();
-			}finally {
-				sqlhelp.DBclose();
-			}
+			
+			 Choose.setEnabled(true);
+			 CallServerEmailWorker callEmail=new CallServerEmailWorker(UserID, UserType, UserMail);
+			 callEmail.execute();
+//			try {
+//				rs=sqlhelp.queryExec(UserID);
+//				if(!rs.next()){
+//					JOptionPane.showMessageDialog(this, "该账号不存在！");
+//				}else {
+//						
+//					String	UType=rs.getString(3);
+//					String	UMail=rs.getString(4);
+//					if(UserMail.equals(UMail)&&UserType.equals(UType)){
+//						 
+//						 GetVerif.setEnabled(false);
+//						 Choose.setEnabled(true);
+//						 MySwingWorker swingWorker=new MySwingWorker();
+//						 swingWorker.execute();
+//						
+//						 if(flag==false){
+//							 JOptionPane.showMessageDialog(this, "发送中途失败"); 
+//						 }
+//						 
+//						 JOptionPane.showMessageDialog(this, "已发送至邮箱！"); 
+//						
+//					}else {
+//						 JOptionPane.showMessageDialog(this, "信息填写有误！"); 
+//					}
+//				}
+//			} catch (Exception e2) {
+//				e2.printStackTrace();
+//			}finally {
+//				sqlhelp.DBclose();
+//			}
 			
 		}
 		if(e.getSource()==Choose){
 			if(jtf4.getText().equals("")){
 				JOptionPane.showMessageDialog(this, "请填写验证码！");
-			}else if(!jtf4.getText().equals(verify)){
-				JOptionPane.showMessageDialog(this, "验证码错误！");
+				return;
 			}else {
-				String NewPass=jtf2.getText().trim();
-				String []paras=
-					{NewPass,UserID};
-				String sql="update Person set  PassWord=?  where UserID=?";
-				if(!sqlhelp.EditExec(sql, paras, "PersonTable"))
-				{JOptionPane.showMessageDialog(this, "密码修改失败！");}
-				else{
-					  JOptionPane.showMessageDialog(this, "密码修改成功！");
-				}
+				String NewPass=String.copyValueOf(passwordField.getPassword());
+				CallChangePassWorker changePass=new CallChangePassWorker(jtf4.getText().trim(),UserID, NewPass);
+						changePass.execute();
 			}
-//		----------------------------------------------	
-//			
-//			UserMsgModel temp=new UserMsgModel();
-//			String sql="insert into Person values(?,?,?,?)";
-//			String Type=  (String)DownList.getSelectedItem();
-//		String []paras=
-//			{jtf1.getText(),jtf2.getText(),Type,jtf3.getText()};
-//		System.out.println(jtf1.getText()+"  "+jtf2.getText()+"   "+Type);
-//		if(!Type.equals("非会员")){
-//			String VerifMsg=jtf3.getText().trim();
-//			if(VerifMsg.equals(""))
-//				JOptionPane.showMessageDialog(this, "请填写邀请码！");
-//			else if(!VerifMsg.equals("xustsoft"))
-//				JOptionPane.showMessageDialog(this, "邀请码错误！");
-//			else {
-//				SqlHelper sqlhelp =new SqlHelper();
-//				String[] IDs={jtf1.getText()};
-//				if(sqlhelp.CheckExist(IDs,"PersonTable")==true){
-//					JOptionPane.showMessageDialog(this, "该ID已存在！");
-//				}else{
-//				if(!temp.EditUser(sql, paras,"PersonTable")){
-//					JOptionPane.showMessageDialog(this, "添加失败！");
-//				  }else{
-//					  JOptionPane.showMessageDialog(this, "添加成功！");
-//						 
-//				  }
-//				}
-//			}
-//		}else {
-//			SqlHelper sqlhelp =new SqlHelper();
-//			String[] IDs={jtf1.getText()};
-//			if(sqlhelp.CheckExist(IDs,"PersonTable")==true){
-//				JOptionPane.showMessageDialog(this, "该ID已存在！");
-//			}else{
-//			if(!temp.EditUser(sql, paras,"PersonTable")){
-//				JOptionPane.showMessageDialog(this, "添加失败！");
-//			  }else{
-//				  JOptionPane.showMessageDialog(this, "添加成功！");
-//					 
-//			  }
-//			}
-//		
-//		}
+
 		}
 		
 		if(e.getSource()==Cancel){
 			this.dispose();
 			
-//			NewpassWorker.SetFlag(false);
 		 	}
+	}
+	private class CallChangePassWorker extends SwingWorker<Void, Void>{
+		private String verify;
+		private String UserID;
+		private String NewPass;
+		public CallChangePassWorker( String verify,String UserID,String NewPass){
+			this.verify=verify;
+			this.UserID=UserID;
+			this.NewPass=NewPass;
+		}
+		@Override
+		protected Void doInBackground() throws Exception {
+			SecretMsg changePassMsg=new SecretMsg();
+			changePassMsg.setMsgType(Msg.ChangePassword_MSG);	
+			byte[] enVerify = AESCoder.encrypt(this.verify.getBytes(), SecretInfo.getKey());
+			byte[] enUserID = AESCoder.encrypt(this.UserID.getBytes(), SecretInfo.getKey());
+			byte[] enNewPass = AESCoder.encrypt(this.NewPass.getBytes(), SecretInfo.getKey());
+			changePassMsg.setEnMsg(enVerify);
+			changePassMsg.setEnUserID(enUserID);
+			changePassMsg.setEnPassWord(enNewPass);
+			if(MapHoldReceiveThread.IsEmpty())
+				return null;	
+			Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+			ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+			oos.writeObject(changePassMsg);//发送要求Email信息
+			
+			ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+			SecretMsg sMsg=(SecretMsg)ois.readObject();
+			if(sMsg.getMsgType()==Msg.ChangePassRespond_MSG){
+				
+				//消息解密
+				byte[] DeMsg=AESCoder.decrypt(sMsg.getEnMsg(), SecretInfo.getKey());
+				String msgString=new String(DeMsg);
+				//签名验证--用Server的证书公钥
+				String sha1Hex2 = DigestUtils.sha1Hex(DeMsg);
+				boolean flag=CertificateCoder.verify(sha1Hex2.getBytes(), sMsg.getSign(), ServerMsg.certificatePath);
+				if(flag==false){
+					JOptionPane.showMessageDialog(null, "与服务器通信被拦截修改！中断连接");
+					ss.close();
+					Thread.sleep(5000);
+					System.exit(0);
+				}else if(msgString.equals(Msg.OKmsg)){
+					JOptionPane.showMessageDialog(UserMailForPassword.this, "密码修改成功！！");
+					UserMailForPassword.this.dispose();
+				}	
+				else 
+					 JOptionPane.showMessageDialog(UserMailForPassword.this, "密码修改失败!!"); 
+			}
+			return null;
+		}
+		@Override
+		protected void done() {
+			
+			super.done();
+		}
+	
+		
+	}
+
+	private class CallServerEmailWorker extends SwingWorker<Void, Void>{
+		 
+		private String UserID;
+		private String UserMail;
+		private String UserType;
+		public CallServerEmailWorker(String UserID,String UserType,String UserMail){
+			this.UserID=UserID;
+			this.UserType=UserType;
+			this.UserMail=UserMail;
+		}
+		@Override
+		protected Void doInBackground() throws Exception {
+			SecretMsg sendMailMsg=new SecretMsg();
+			sendMailMsg.setMsgType(Msg.SendEmail_MSG);	
+			byte[] enUserID = AESCoder.encrypt(UserID.getBytes(), SecretInfo.getKey());
+			byte[] enUserType = AESCoder.encrypt(UserType.getBytes(), SecretInfo.getKey());
+			byte[] enUserMail = AESCoder.encrypt(UserMail.getBytes(), SecretInfo.getKey());
+			sendMailMsg.setEnUserID(enUserID);
+			sendMailMsg.setEnUserType(enUserType);
+			sendMailMsg.setEnUserMail(enUserMail);
+			if(MapHoldReceiveThread.IsEmpty())
+				return null;
+			Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+			ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+			oos.writeObject(sendMailMsg);//发送要求Email信息
+			
+			ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+			SecretMsg sMsg=(SecretMsg)ois.readObject();
+			if(sMsg.getMsgType()==Msg.SendEmailRespond_MSG){
+				
+				//消息解密
+				byte[] DeMsg=AESCoder.decrypt(sMsg.getEnMsg(), SecretInfo.getKey());
+				String msgString=new String(DeMsg);
+				//签名验证--用Server的证书公钥
+				String sha1Hex2 = DigestUtils.sha1Hex(DeMsg);
+				boolean flag=CertificateCoder.verify(sha1Hex2.getBytes(), sMsg.getSign(), ServerMsg.certificatePath);
+				if(flag==false){
+					JOptionPane.showMessageDialog(null, "与服务器通信被拦截修改！中断连接");
+					ss.close();
+					Thread.sleep(5000);
+					System.exit(0);
+				}else if(msgString.equals(Msg.OKmsg)){
+						JOptionPane.showMessageDialog(UserMailForPassword.this, "已发送至邮箱！！");
+						 MySwingWorker swingWorker=new MySwingWorker();
+						 swingWorker.execute();
+				}
+				else 
+					 JOptionPane.showMessageDialog(UserMailForPassword.this, "信息不正确/发送中途失败"); 
+			}
+			return null;
+		}
+		@Override
+		protected void done() {
+			
+			super.done();
+		}
+	
+		
 	}
 
 	

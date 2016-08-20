@@ -1,4 +1,4 @@
-package com.Room;
+package com.Post;
 import com.User.*;
 import java.awt.BorderLayout;
 import java.awt.Font;

@@ -1,12 +1,11 @@
 package com.Stu;
-import com.Absence.*;
-import java.awt.BorderLayout;
-import com.User.*;
-import com.Absence.AbsenceDiaLog;
-import com.Stu.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.*;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.sql.ResultSet;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JButton;
@@ -17,8 +16,21 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableModel;
 
-import com.Tools.*;
+import org.apache.commons.codec.binary.Base64;
+
+import com.Absence.AbsenceMenu;
+import com.Common.Msg;
+import com.Common.SecretMsg;
+import com.Model.MapHoldReceiveThread;
+import com.Secret.AESCoder;
+import com.Tools.DBMsg;
+import com.Tools.FileControl;
+import com.Tools.SecretInfo;
+import com.Tools.SqlHelper;
+import com.User.UserMsgModel;
 public class StuMenu extends JFrame implements ActionListener{
 	private ResultSet rs=null;
 	private FileControl FileCon=null;
@@ -34,6 +46,7 @@ public class StuMenu extends JFrame implements ActionListener{
 	private JTextField jtf;
 		
 	private UserMsgModel UMM;
+	private DefaultTableModel model;
 	private DBMsg 	dbMsg=new DBMsg();
 		
 		String DBTable="DetailTable";
@@ -135,11 +148,13 @@ public class StuMenu extends JFrame implements ActionListener{
 		jp2.add(jb4);
 		
 		//创建数据模型对象
-		  UMM=new UserMsgModel();
-		  String sql ="select * from DetailMsg";
-		  UMM.queryUser(sql,this.TableParas,DBTable);
+//		  UMM=new UserMsgModel();
+//		  String sql ="select * from DetailMsg";
+//		  UMM.queryUser(sql,this.TableParas,DBTable);
+		   model=new DefaultTableModel();
+		jtb=new JTable();//把模型加入到JTable
+		jtb.setModel(model);
 		
-		jtb=new JTable(UMM);//把模型加入到JTable
 		jtb.setRowHeight(40);
 		jsp=new JScrollPane(jtb);
 		
@@ -160,7 +175,8 @@ public class StuMenu extends JFrame implements ActionListener{
 		pack();
 		this.setVisible(true);
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		
+		CallTableWorker callserver=new CallTableWorker();
+		callserver.execute();
 	}
 
 	@Override
@@ -271,6 +287,72 @@ public class StuMenu extends JFrame implements ActionListener{
 		
 	}
 
+	private class CallTableWorker extends SwingWorker<Void, Vector<String>>{
+		
+		private Vector columnNames;
+		private Vector rowData;
+		public CallTableWorker(){
+			
+		}
+		private void TransInfo(Vector rowData){
+			//用于将server传来的信息对称解密
+			for(Object V:rowData){
+				Vector hang=(Vector)V;
+				for(int i=0;i<hang.size();i++){
+					byte[] Deinfo;
+					try {
+						Deinfo=AESCoder.decrypt(((String)hang.get(i)).getBytes(), SecretInfo.getKey());
+						String info=new String(Deinfo);
+						hang.set(i,info);
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+				}
+				publish(hang);
+			}
 
+		}
+		@Override
+		protected Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.StuMenuCallTable_MSG);
+			try {
+			
+//				if(MapHoldReceiveThread.IsEmpty())
+//					return null;
+//				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+//				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				ObjectOutputStream oos=MapHoldReceiveThread.getOos();
+				oos.writeObject(tableMsg);
+				
+			//	ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				ObjectInputStream ois=MapHoldReceiveThread.getOis();
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				
+				if(sMsg.getMsgType()==Msg.RespondStu_MSG){
+					this.columnNames=sMsg.getColumnNames();
+				//	this.rowData=sMsg.getEnrowData();
+					TransInfo(sMsg.getEnrowData());
+					
+				}
+				
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			
+			return null;
+		}
+		@Override
+		protected void process(List<Vector<String>> chunks) {
+	         for (Vector<String> chunk : chunks)
+	         { this.rowData.add(chunk);
+	            model.setDataVector(this.rowData , this.columnNames);
+	         }
+		}
+	}
+	
 	
 }

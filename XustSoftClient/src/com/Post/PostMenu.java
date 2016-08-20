@@ -1,4 +1,4 @@
-package com.Room;
+package com.Post;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,7 +19,7 @@ import com.Tools.FileControl;
 import com.Tools.SqlHelper;
 import com.User.UserMsgModel;
 
-public class RoomMenu extends JFrame implements ActionListener{
+public class PostMenu extends JFrame implements ActionListener{
 	private FileControl FileCon=null;
 	private ResultSet rs=null;
 	private JPanel jp;
@@ -88,7 +88,7 @@ public class RoomMenu extends JFrame implements ActionListener{
 			}
 		}
 	}
-	public RoomMenu(String UserType){
+	public PostMenu(String UserType){
 		this.UserType=UserType;
 		UpdataClassMSG();
 		Add=new JButton("新增");
@@ -150,7 +150,7 @@ public class RoomMenu extends JFrame implements ActionListener{
 	}
 	
 	public static void main(String[] args) {
-		new RoomMenu("管理员");
+		new PostMenu("管理员");
 
 	}
 

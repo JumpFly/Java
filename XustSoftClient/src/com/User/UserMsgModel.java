@@ -19,10 +19,10 @@ public class UserMsgModel extends AbstractTableModel {
 	private PreparedStatement ps=null;
 	private Connection ct=null;
 	private ResultSet rs=null;
-	private String url="jdbc:microsoft:sqlserver://127.0.0.1:1433;databaseName=SchoolDB";
-	private String DBuser="sa";
-	private String DBpass="wei1995922";
-	private String driver ="com.microsoft.jdbc.sqlserver.SQLServerDriver";
+//	private String url="jdbc:microsoft:sqlserver://127.0.0.1:1433;databaseName=SchoolDB";
+//	private String DBuser="sa";
+//	private String DBpass="wei1995922";
+//	private String driver ="com.microsoft.jdbc.sqlserver.SQLServerDriver";
 	public boolean EditUser(String sql,String []paras,String DBTable){
 		SqlHelper sqlhelp =SqlHelper.getInstance();
 		return sqlhelp.EditExec(sql, paras,DBTable);
@@ -86,5 +86,19 @@ public class UserMsgModel extends AbstractTableModel {
 		// TODO Auto-generated method stub
 		return ((Vector)this.rowData.get(rowIndex)).get(columnIndex);
 	}
+	public Vector getRowData() {
+		return rowData;
+	}
 
+	public void setRowData(Vector rowData) {
+		this.rowData = rowData;
+	}
+
+	public Vector getColumnNames() {
+		return columnNames;
+	}
+
+	public void setColumnNames(Vector columnNames) {
+		this.columnNames = columnNames;
+	}
 }

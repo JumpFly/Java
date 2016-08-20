@@ -16,8 +16,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import com.Room.RoomMenu;
 import com.Absence.*;
+import com.Post.PostMenu;
 public class ControlMenu extends JFrame implements ActionListener {
 
 	private JPanel panel1=null;
@@ -34,7 +34,7 @@ public class ControlMenu extends JFrame implements ActionListener {
 	private Font myFont=null;
 	
 	private StuMenu test1=null;
-	private RoomMenu test2=null;
+	private PostMenu test2=null;
 	private AbsenceMenu test4=null;
 	
 	public String getTime(){
@@ -133,16 +133,26 @@ public class ControlMenu extends JFrame implements ActionListener {
 			
 		}
 		if(e.getSource()==jb2){
-			
+//			if(UserType.equals("非会员")){
+//				JOptionPane.showMessageDialog(this, "非会员无权查看");
+//				return;
+//			}
 			 test1=new StuMenu(UserType);
 				
 		}
 		if(e.getSource()==jb3){
-			
-			test2=new RoomMenu(UserType);
+			if(UserType.equals("非会员")){
+				JOptionPane.showMessageDialog(this, "非会员无权查看");
+				return;
+			}
+			test2=new PostMenu(UserType);
 			
 		}
 		if(e.getSource()==jb4){
+			if(UserType.equals("非会员")){
+				JOptionPane.showMessageDialog(this, "非会员无权查看");
+				return;
+			}
 			test4=new AbsenceMenu(UserType);
 		}
 		
