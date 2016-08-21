@@ -141,18 +141,18 @@ public class ControlMenu extends JFrame implements ActionListener {
 				
 		}
 		if(e.getSource()==jb3){
-			if(UserType.equals("非会员")){
-				JOptionPane.showMessageDialog(this, "非会员无权查看");
-				return;
-			}
+//			if(UserType.equals("非会员")){
+//				JOptionPane.showMessageDialog(this, "非会员无权查看");
+//				return;
+//			}
 			test2=new PostMenu(UserType);
 			
 		}
 		if(e.getSource()==jb4){
-			if(UserType.equals("非会员")){
-				JOptionPane.showMessageDialog(this, "非会员无权查看");
-				return;
-			}
+//			if(UserType.equals("非会员")){
+//				JOptionPane.showMessageDialog(this, "非会员无权查看");
+//				return;
+//			}
 			test4=new AbsenceMenu(UserType);
 		}
 		

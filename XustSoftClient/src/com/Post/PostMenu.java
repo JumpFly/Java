@@ -2,7 +2,11 @@ package com.Post;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.sql.ResultSet;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -12,7 +16,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableModel;
 
+import org.apache.commons.codec.binary.Base64;
+
+import com.Common.Msg;
+import com.Common.SecretMsg;
+import com.Model.MapHoldReceiveThread;
 import com.Stu.StuAddDiaLog;
 import com.Tools.DBMsg;
 import com.Tools.FileControl;
@@ -32,65 +43,17 @@ public class PostMenu extends JFrame implements ActionListener{
 	private JLabel jl;
 	private JButton jb1,jb2;
 	private JTextField jtf;
-	
+	private DefaultTableModel model;
 	private UserMsgModel UMM;
 	private DBMsg 	dbMsg=new DBMsg();
 	
 	private String DBTable="XustPostTable";
 	private String []TableParas=dbMsg.XustPostTable;
 	private PostAddDiaLog CAd=null;
-	private String[]	XustPosts;
 	private String	UserType;
-	public String[] ReturnUserPosts(){
-		String UserPost="";
-		SqlHelper sqlhelp= SqlHelper.getInstance();
-		try {
-			String sql="select UserPost from XustPost";
-			rs=sqlhelp.queryExecute(sql);
-			while(rs.next()){
-				UserPost+=rs.getString(1)+" ";
-			}
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			sqlhelp.DBclose();
-		}
-		return UserPost.split(" ");
-	}
 	
-	
-	public  void UpdataClassMSG(){
-		String sql="",sql2="";
-		SqlHelper sqlhelp=SqlHelper.getInstance();
-		XustPosts=ReturnUserPosts();
-	
-		for (int i = 0; i < XustPosts.length; i++) {
-			int NUM=0;
-			sql="select *from DetailMsg where UserPost="+"'"+XustPosts[i]+"'";
-			try {
-				rs=sqlhelp.queryExecute(sql);
-				while(rs.next()){
-					NUM++;
-				}
-			} catch (Exception e2) {
-				e2.printStackTrace();
-			}finally {
-				sqlhelp.DBclose();
-			}
-			sql2="update XustPost set PersonNum="+"'"+NUM+"'"+" where UserPost="+"'"+XustPosts[i]+"'";
-				try {
-				sqlhelp.queryExe(sql2);
-			} catch (Exception e2) {
-				e2.printStackTrace();
-			}finally {
-				sqlhelp.DBclose();
-			}
-		}
-	}
 	public PostMenu(String UserType){
 		this.UserType=UserType;
-		UpdataClassMSG();
 		Add=new JButton("新增");
 		Add.addActionListener(this);
 		Delete=new JButton("删除");
@@ -122,12 +85,11 @@ public class PostMenu extends JFrame implements ActionListener{
 		jp2.add(Delete);
 
 		
-		//创建数据模型对象
-		  UMM=new UserMsgModel();
-		  String sql ="select * from XustPost";
-		  UMM.queryUser(sql,this.TableParas,DBTable);
-		
-		jtb=new JTable(UMM);//把模型加入到JTable
+		   model=new DefaultTableModel();
+			jtb=new JTable();//把模型加入到JTable
+			jtb.setModel(model);
+			
+			jtb.setRowHeight(40);
 		
 		jsp=new JScrollPane(jtb);
 		
@@ -138,7 +100,8 @@ public class PostMenu extends JFrame implements ActionListener{
 			MsgFileGetOut.setEnabled(false);
 		}
 		
-		
+		CallTableWorker callserver=new CallTableWorker();
+		callserver.execute();
 		this.add(jsp);
 		this.add(jp1,"North");
 		this.add(jp2,"South");
@@ -202,42 +165,108 @@ public class PostMenu extends JFrame implements ActionListener{
 			
 			
 		}else if(e.getSource()==update){
-			/*先刷新班级人数，再刷新列表
-			 * */
-			UpdataClassMSG();
-			
-			UMM=new UserMsgModel();
-			 String sql3 ="select * from XustPost";
-			  UMM.queryUser(sql3,this.TableParas,DBTable);
-			jtb.setModel(UMM);//获取新的数据模型 		
+
+			CallTableWorker callserver=new CallTableWorker();
+			callserver.execute();	
 		}
 		if(e.getSource()==jb1){
 			String UserPost =jtf.getText();
-			String sql;
-			 UMM=new UserMsgModel();
-			if(UserPost.equals("")){
-				  sql ="select * from XustPost";
-				  UMM.queryUser(sql,this.TableParas,DBTable);
-				  jtb.setModel(UMM);//获取新的数据模型 
-			}else{
-			 sql="select * from XustPost where UserPost='"+UserPost+"'";
-			 /*
-			  * 改善交互，若查找的ID不存在则给出提示。
-			  * */
-			 SqlHelper sqlhelp=SqlHelper.getInstance();
-				String[] UserPosts={UserPost};
-				 if(sqlhelp.CheckExist(UserPosts, "XustPostTable")){
-					 UMM.queryUser(sql,this.TableParas,DBTable);
-					 jtb.setModel(UMM);//获取新的数据模型 
-				 }
-				 else
-					 JOptionPane.showMessageDialog(this, "无该部门记录！");
-				 
-			}
-		
+			FindTheOneWorker callserverfind=new FindTheOneWorker(UserPost);
+			callserverfind.execute();	
 			
 		}
 		
 	}
+	
+	private class FindTheOneWorker extends SwingWorker<Void, Vector<String>>{
+		
+		private Vector columnNames;
+		private Vector rowData;
+		private String PostBase64;
+		public FindTheOneWorker(String Post){
+			this.PostBase64=Base64.encodeBase64String(Post.getBytes());
+		}
+	
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.FindTheOneMsg_MSG);
+			tableMsg.setMenu(Msg.PostMenu);
+			tableMsg.setFindOne(this.PostBase64);
+			try {
+			
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				
+				
+				
+				if(sMsg.getMsgType()==Msg.RespondPost_MSG){
+					if(sMsg.getOKorNo().equals(Msg.OKmsg)){
+						this.columnNames=sMsg.getColumnNames();
+						this.rowData=sMsg.getEnrowData();
+						DBMsg.TransInfo(this.rowData);
+						model.setDataVector(this.rowData , this.columnNames);
+					}else{
+						 JOptionPane.showMessageDialog(null, "无该部门记录！");
+					}
+					
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			
+			return null;
+		}
+	}
+	private class CallTableWorker extends SwingWorker<Void, Vector<String>>{
+		
+		private Vector columnNames;
+		private Vector rowData;
+		public CallTableWorker(){
+			
+		}
+	
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.PostMenuCallTable_MSG);
+			try {
+			
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				
+				if(sMsg.getMsgType()==Msg.RespondPost_MSG){
+					this.columnNames=sMsg.getColumnNames();
+					this.rowData=sMsg.getEnrowData();
+					DBMsg.TransInfo(this.rowData);
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			
+			return null;
+		}
+		@Override
+		protected void done() {
+			super.done();
+			model.setDataVector(this.rowData , this.columnNames);
+		}
 
+	}
+	
+	
 }

@@ -57,58 +57,59 @@ public class StuMenu extends JFrame implements ActionListener{
 		UserUPMsg  uum;
 		String UserType;
 		
-		
-		public String[] ReturnUserPosts(){
-			String UserPost="";
-			SqlHelper sqlhelp= SqlHelper.getInstance();
-			try {
-				String sql="select UserPost from XustPost";
-				rs=sqlhelp.queryExecute(sql);
-				while(rs.next()){
-					UserPost+=rs.getString(1)+" ";
-				}
-				
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				sqlhelp.DBclose();
-			}
-			return UserPost.split(" ");
-		}
-		
-		public  void UpdataClassMSG(){
-			String sql="",sql2="";
-			SqlHelper sqlhelp=SqlHelper.getInstance();
-			UserPosts=ReturnUserPosts();
-		
-			for (int i = 0; i < UserPosts.length; i++) {
-				int NUM=0;
-				sql="select *from DetailMsg where UserPost="+"'"+UserPosts[i]+"'";
-				try {
-					rs=sqlhelp.queryExecute(sql);
-					while(rs.next()){
-						NUM++;
-					}
-				} catch (Exception e2) {
-					e2.printStackTrace();
-				}finally {
-					sqlhelp.DBclose();
-				}
-				sql2="update XustPost set PersonNum="+"'"+NUM+"'"+" where UserPost="+"'"+UserPosts[i]+"'";
-					try {
-					sqlhelp.queryExe(sql2);
-				} catch (Exception e2) {
-					e2.printStackTrace();
-				}finally {
-					sqlhelp.DBclose();
-				}
-			}
-		}	
-		
+//		
+//		public String[] ReturnUserPosts(){
+//			String UserPost="";
+//			SqlHelper sqlhelp= SqlHelper.getInstance();
+//			try {
+//				String sql="select UserPost from XustPost";
+//				rs=sqlhelp.queryExecute(sql);
+//				while(rs.next()){
+//					UserPost+=rs.getString(1)+" ";
+//				}
+//				
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			} finally {
+//				sqlhelp.DBclose();
+//			}
+//			return UserPost.split(" ");
+//		}
+//		
+//		public  void UpdataClassMSG(){
+//			String sql="",sql2="";
+//			SqlHelper sqlhelp=SqlHelper.getInstance();
+//			UserPosts=ReturnUserPosts();
+//		
+//			for (int i = 0; i < UserPosts.length; i++) {
+//				int NUM=0;
+//				sql="select *from DetailMsg where UserPost="+"'"+UserPosts[i]+"'";
+//				try {
+//					rs=sqlhelp.queryExecute(sql);
+//					while(rs.next()){
+//						NUM++;
+//					}
+//				} catch (Exception e2) {
+//					e2.printStackTrace();
+//				}finally {
+//					sqlhelp.DBclose();
+//				}
+//				sql2="update XustPost set PersonNum="+"'"+NUM+"'"+" where UserPost="+"'"+UserPosts[i]+"'";
+//					try {
+//					sqlhelp.queryExe(sql2);
+//				} catch (Exception e2) {
+//					e2.printStackTrace();
+//				}finally {
+//					sqlhelp.DBclose();
+//				}
+//			}
+//		}	
+//		
 	public static void main(String[] args) {
 		StuMenu test2=new StuMenu("管理员");
 
 	}
+
 	
 	public StuMenu(String UserType){
 		
@@ -148,10 +149,7 @@ public class StuMenu extends JFrame implements ActionListener{
 		jp2.add(jb3);
 		jp2.add(jb4);
 		
-		//创建数据模型对象
-//		  UMM=new UserMsgModel();
-//		  String sql ="select * from DetailMsg";
-//		  UMM.queryUser(sql,this.TableParas,DBTable);
+
 		   model=new DefaultTableModel();
 		jtb=new JTable();//把模型加入到JTable
 		jtb.setModel(model);
@@ -201,37 +199,20 @@ public class StuMenu extends JFrame implements ActionListener{
 			
 		}
 		if(e.getSource()==update){
-			/*刷新班级人数,刷新列表
-			 * */
-			UpdataClassMSG();
-			UMM=new UserMsgModel();
-			 String sql3 ="select * from DetailMsg";
-			  UMM.queryUser(sql3,this.TableParas,DBTable);
-			jtb.setModel(UMM);//获取新的数据模型 		
+			CallTableWorker updata=new CallTableWorker();
+			updata.execute();
+	
 		}
 		
 		if(e.getSource()==jb1){//查询
 			String UserNum =jtf.getText();
-			String sql;
-			 UMM=new UserMsgModel();
 			if(UserNum.equals("")){
-				  sql ="select * from DetailMsg";
-				  UMM.queryUser(sql,this.TableParas,DBTable);
-				  jtb.setModel(UMM);//获取新的数据模型 
-			}else{
-			 sql="select * from DetailMsg where UserNum='"+UserNum+"'";
-			
-			 SqlHelper sqlhelp=SqlHelper.getInstance();
-				String[] UserNums={UserNum};
-				 if(sqlhelp.CheckExist(UserNums, "AbsenceTable_Up")){
-					 UMM.queryUser(sql,this.TableParas,DBTable);
-					 jtb.setModel(UMM);//获取新的数据模型 
-				 }
-				 else
-					 JOptionPane.showMessageDialog(this, "无该学号记录！");
-				 
-			}	 
-			
+				JOptionPane.showMessageDialog(this, "请输入工号！");
+				return;
+			}
+			FindTheOneWorker callserver=new FindTheOneWorker(UserNum);
+			callserver.execute();
+	
 		}
 		
 		if(e.getSource()==jb3){
@@ -242,7 +223,7 @@ public class StuMenu extends JFrame implements ActionListener{
 			    return;
 			}
 			String UserID=(String)UMM.getValueAt(rowNum, 0);
-		//	uud=new StuUpDiaLog(this, "修改用户数据", true, UMM, rowNum);
+	
 			uum=new UserUPMsg(this, true, UserID);
 				UMM=new UserMsgModel();
 				String sql2 ="select * from DetailMsg";
@@ -288,6 +269,51 @@ public class StuMenu extends JFrame implements ActionListener{
 		
 	}
 
+	private class FindTheOneWorker extends SwingWorker<Void, Vector<String>>{
+		
+		private Vector columnNames;
+		private Vector rowData;
+		private String UserNumBase64;
+		public FindTheOneWorker(String UserNum){
+			this.UserNumBase64=Base64.encodeBase64String(UserNum.getBytes());
+		}
+	
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.FindTheOneMsg_MSG);
+			tableMsg.setMenu(Msg.StuMenu);
+			tableMsg.setFindOne(this.UserNumBase64);
+			try {
+			
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				if(sMsg.getMsgType()==Msg.RespondStu_MSG){
+					if(sMsg.getOKorNo().equals(Msg.OKmsg)){
+						this.columnNames=sMsg.getColumnNames();
+						this.rowData=sMsg.getEnrowData();
+						DBMsg.TransInfo(this.rowData);
+						model.setDataVector(this.rowData , this.columnNames);
+					}else{
+						 JOptionPane.showMessageDialog(null, "无该学号记录！");
+					}
+					
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			
+			return null;
+		}
+	}
+	
 	private class CallTableWorker extends SwingWorker<Void, Vector<String>>{
 		
 		private Vector columnNames;
@@ -295,31 +321,9 @@ public class StuMenu extends JFrame implements ActionListener{
 		public CallTableWorker(){
 			
 		}
-		private void TransInfo(Vector rowData){
-			//用于将server传来的信息对称解密,注意加密后的byte数组是不能强制转换成字符串的,所以用到Hex
-			for(Object V:rowData){
-				Vector hang=(Vector)V;
-				for(int i=0;i<hang.size();i++){
-					String stt=(String)hang.get(i);
-					byte[] Deinfo;
-					try {
-						Deinfo=AESCoder.decrypt(Hex.decodeHex(stt.toCharArray()), SecretInfo.getKey());
-							String info=new String(Deinfo);
-							hang.set(i,info);
-			
-						
-						
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					
-				}
-		
-			}
-
-		}
+	
 		@Override
-		protected Void doInBackground() throws Exception {
+		protected synchronized Void doInBackground() throws Exception {
 			
 			SecretMsg tableMsg=new SecretMsg();
 			tableMsg.setMsgType(Msg.StuMenuCallTable_MSG);
@@ -337,11 +341,8 @@ public class StuMenu extends JFrame implements ActionListener{
 				if(sMsg.getMsgType()==Msg.RespondStu_MSG){
 					this.columnNames=sMsg.getColumnNames();
 					this.rowData=sMsg.getEnrowData();
-					TransInfo(this.rowData);
-				
-					
+					DBMsg.TransInfo(this.rowData);
 				}
-				
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
@@ -350,7 +351,6 @@ public class StuMenu extends JFrame implements ActionListener{
 		}
 		@Override
 		protected void done() {
-			
 			super.done();
 			model.setDataVector(this.rowData , this.columnNames);
 		}

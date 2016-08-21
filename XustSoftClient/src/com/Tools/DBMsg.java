@@ -3,13 +3,16 @@ package com.Tools;
 import java.sql.ResultSet;
 import java.util.Vector;
 
+import org.apache.commons.codec.binary.Hex;
+
+import com.Secret.AESCoder;
+
 public class DBMsg {
 	private Vector	rowData=new Vector();
 	public static final String[] DetailMsgTable = {"学号","姓名","性别","专业","邮箱"};
 	public static final String[] XustPostTable = {"协会部门","人数"};
-	public static final String[] FeeTable = {"学号","月份","住宿费","伙食费","书本费","空调费","暖气费","退费","父母职称"};
+	
 	public static final String[] AbsenceTable = {"学号","日期","备注"};
-	public static final String[] PersonTable = {"用户ID","密码","用户类型","用户存款"};
 	
 	public Vector ReturnData(ResultSet rs,String DBTable){
 		rowData.clear();
@@ -55,5 +58,25 @@ public class DBMsg {
   }	
 		return rowData;
 	}
+	public static void TransInfo(Vector rowData){
+		//用于将server传来的信息对称解密,注意加密后的byte数组是不能强制转换成字符串的,所以用到Hex
+		for(Object V:rowData){
+			Vector hang=(Vector)V;
+			for(int i=0;i<hang.size();i++){
+				String stt=(String)hang.get(i);
+				byte[] Deinfo;
+				try {
+					Deinfo=AESCoder.decrypt(Hex.decodeHex(stt.toCharArray()), SecretInfo.getKey());
+						String info=new String(Deinfo);
+						hang.set(i,info);
+		
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+			}
 	
+		}
+
+	}
 }

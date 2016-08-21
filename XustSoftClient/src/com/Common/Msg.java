@@ -24,8 +24,14 @@ public interface Msg {
 	public static final int RespondStu_MSG = 16;//返回表数据
 	public static final int RespondPost_MSG = 17;//返回表数据
 	public static final int RespondAbsence_MSG = 18;//返回表数据
+	public static final int StuMenu=19;	
+	public static final int PostMenu=20;	
+	public static final int AbsenceMenu=21;	
 	
 	public static final String OKmsg="OK";
 	public static final String NOmsg="NO";
 	public static final String EXISTmsg="EXIST";
+
+	
+	
 }

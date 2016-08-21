@@ -2,6 +2,10 @@ package com.Absence;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -11,7 +15,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableModel;
 
+import org.apache.commons.codec.binary.Base64;
+
+import com.Common.Msg;
+import com.Common.SecretMsg;
+import com.Model.MapHoldReceiveThread;
 import com.Stu.StuAddDiaLog;
 import com.Tools.DBMsg;
 import com.Tools.FileControl;
@@ -31,7 +42,7 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 	private JLabel jl;
 	private JButton jb1,jb2;
 	private JTextField jtf;
-	
+	private DefaultTableModel model;
 	private UserMsgModel UMM;
 	private DBMsg 	dbMsg=new DBMsg();
 	private String UserType;
@@ -64,19 +75,13 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 		jp1.add(MsgFileGetOut);
 		
 		jp2=new JPanel();
-		
-		
-		
 		jp2.add(Add);
 		jp2.add(Delete);
 
-		
-		//创建数据模型对象
-		  UMM=new UserMsgModel();
-		  String sql ="select * from Absence";
-		  UMM.queryUser(sql,this.TableParas,DBTable);
-		
-		jtb=new JTable(UMM);//把模型加入到JTable
+		model=new DefaultTableModel();
+		jtb=new JTable();//把模型加入到JTable
+		jtb.setModel(model);
+		jtb.setRowHeight(40);
 		
 		jsp=new JScrollPane(jtb);
 		
@@ -87,7 +92,8 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 			MsgFileGetOut.setEnabled(false);
 		}
 		
-		
+		CallTableWorker updata=new CallTableWorker();
+		updata.execute();
 		this.add(jsp);
 		this.add(jp1,"North");
 		this.add(jp2,"South");
@@ -101,7 +107,6 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 	
 	public static void main(String[] args) {
 		new AbsenceMenu("管理员");
-		
 	}
 
 	@Override
@@ -117,10 +122,7 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 		}
 		
 		if(e.getSource()==Add){
-			
 			AbsenceDiaLog test=new AbsenceDiaLog(this, "缺勤记录", false);
-			
-			
 		}else if(e.getSource()==Delete){
 			
 			//删除
@@ -155,38 +157,108 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 			
 		}else if(e.getSource()==update){
 			
-			UMM=new UserMsgModel();
-			 String sql2 ="select * from Absence";
-			  UMM.queryUser(sql2,this.TableParas,DBTable);
-			jtb.setModel(UMM);//获取新的数据模型 		
+			CallTableWorker updata=new CallTableWorker();
+			updata.execute();		
 		}
 		if(e.getSource()==jb1){
-			String UserNum =jtf.getText();
-			String sql;
-			 UMM=new UserMsgModel();
+			String UserNum =jtf.getText().trim();
 			if(UserNum.equals("")){
-				  sql ="select * from Absence";
-				  UMM.queryUser(sql,this.TableParas,DBTable);
-				  jtb.setModel(UMM);//获取新的数据模型 
-			}else{
-			 sql="select * from Absence where UserNum='"+UserNum+"'";
-			
-			 SqlHelper sqlhelp=SqlHelper.getInstance();
-			String[] UserNums={UserNum};
-			 if(sqlhelp.CheckExist(UserNums, "AbsenceTable_Up")){
-				 UMM.queryUser(sql,this.TableParas,DBTable);
-				 jtb.setModel(UMM);//获取新的数据模型 
-			 }
-				
-			 else
-				 JOptionPane.showMessageDialog(this, "无该学号记录！");
-			 
-			 
+				JOptionPane.showMessageDialog(this, "请输入工号！");
+				return;
 			}
+			FindTheOneWorker callserver=new FindTheOneWorker(UserNum);
+			callserver.execute();
 		
-			
 		}
 		
+	}
+	private class FindTheOneWorker extends SwingWorker<Void, Vector<String>>{
+		
+		private Vector columnNames;
+		private Vector rowData;
+		private String UserNumBase64;
+		public FindTheOneWorker(String UserNum){
+			this.UserNumBase64=Base64.encodeBase64String(UserNum.getBytes());
+		}
+	
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.FindTheOneMsg_MSG);
+			tableMsg.setMenu(Msg.AbsenceMenu);
+			tableMsg.setFindOne(this.UserNumBase64);
+			try {
+			
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				
+				
+				
+				if(sMsg.getMsgType()==Msg.RespondAbsence_MSG){
+					if(sMsg.getOKorNo().equals(Msg.OKmsg)){
+						this.columnNames=sMsg.getColumnNames();
+						this.rowData=sMsg.getEnrowData();
+						DBMsg.TransInfo(this.rowData);
+						model.setDataVector(this.rowData , this.columnNames);
+					}else{
+						 JOptionPane.showMessageDialog(null, "无该记录！");
+					}
+					
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			
+			return null;
+		}
+	}
+	private class CallTableWorker extends SwingWorker<Void, Vector<String>>{
+		
+		private Vector columnNames;
+		private Vector rowData;
+		public CallTableWorker(){
+			
+		}
+	
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.AbsenceMenuCallTable_MSG);
+			try {
+			
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				
+				if(sMsg.getMsgType()==Msg.RespondAbsence_MSG){
+					this.columnNames=sMsg.getColumnNames();
+					this.rowData=sMsg.getEnrowData();
+					DBMsg.TransInfo(this.rowData);
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			
+			return null;
+		}
+		@Override
+		protected void done() {
+			super.done();
+			model.setDataVector(this.rowData , this.columnNames);
+		}
 	}
 
 }
