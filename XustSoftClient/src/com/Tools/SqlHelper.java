@@ -204,10 +204,7 @@ public class SqlHelper {
 				for(int i=0;i<paras.length;i++){
 					ps.setString(i+1, paras[i]);
 				}break;
-//			case "XustPostTable":
-//				for(int i=0;i<paras.length;i++){
-//					ps.setString(i+1, paras[i]);
-//				}break;
+
 			case "XustPostTable":
 				
 					ps.setString(1, paras[0]);

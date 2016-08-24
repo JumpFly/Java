@@ -27,6 +27,25 @@ public interface Msg {
 	public static final int StuMenu=19;	
 	public static final int PostMenu=20;	
 	public static final int AbsenceMenu=21;	
+	public static final int AddMsg=22;	
+	public static final int RespondStuAddMsg=23;	
+	public static final int RespondPostAddMsg=24;	
+	public static final int RespondAbsenceAddMsg=25;		
+	public static final int UPUserMsg=26;
+	public static final int RespondUPUserMsg=27;
+	public static final int AskPostNameMsg=28;
+	public static final int ReturnPostNameMsg=29;
+	public static final int AskUserDetailMsg=30;
+	public static final int ReturnUserDetailMsg=31;
+	public static final int DeleteMsg=32;	
+	public static final int RespondStuDeleteMsg=33;	
+	public static final int RespondPostDeleteMsg=34;	
+	public static final int RespondAbsenceDeleteMsg=35;	
+	public static final int FileGetOutMsg=36;	
+	public static final int RespondStuFileOutMsg=37;	
+	public static final int RespondPostFileOutMsg=38;	
+	public static final int RespondAbsenceFileOutMsg=39;	
+	
 	
 	public static final String OKmsg="OK";
 	public static final String NOmsg="NO";

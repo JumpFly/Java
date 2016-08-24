@@ -153,7 +153,6 @@ public class FileControl {
 					e3.printStackTrace();
 				}
 			}
-		 
 	}
 	//µº»Î
 	public void ReadInFile(String DBTable){
@@ -194,9 +193,6 @@ public class FileControl {
 					e3.printStackTrace();
 				}
 			}
-		 
-		 
-		 
 	}
 
 	private class MessagePone extends JFrame{

@@ -1,6 +1,8 @@
 package com.Stu;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -21,17 +24,19 @@ import javax.swing.table.DefaultTableModel;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import com.Absence.AbsenceMenu;
 import com.Common.Msg;
 import com.Common.SecretMsg;
 import com.Model.MapHoldReceiveThread;
 import com.Secret.AESCoder;
+import com.Secret.CertificateCoder;
 import com.Tools.DBMsg;
 import com.Tools.FileControl;
 import com.Tools.SecretInfo;
+import com.Tools.ServerMsg;
 import com.Tools.SqlHelper;
-import com.User.UserMsgModel;
 public class StuMenu extends JFrame implements ActionListener{
 	private ResultSet rs=null;
 	private FileControl FileCon=null;
@@ -45,8 +50,6 @@ public class StuMenu extends JFrame implements ActionListener{
 	private JLabel jl;
 	private JButton jb1,jb2,jb3,jb4;
 	private JTextField jtf;
-		
-	private UserMsgModel UMM;
 	private DefaultTableModel model;
 	private DBMsg 	dbMsg=new DBMsg();
 		
@@ -56,55 +59,7 @@ public class StuMenu extends JFrame implements ActionListener{
 		StuAddDiaLog stuAddDiaLog=null;
 		UserUPMsg  uum;
 		String UserType;
-		
-//		
-//		public String[] ReturnUserPosts(){
-//			String UserPost="";
-//			SqlHelper sqlhelp= SqlHelper.getInstance();
-//			try {
-//				String sql="select UserPost from XustPost";
-//				rs=sqlhelp.queryExecute(sql);
-//				while(rs.next()){
-//					UserPost+=rs.getString(1)+" ";
-//				}
-//				
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			} finally {
-//				sqlhelp.DBclose();
-//			}
-//			return UserPost.split(" ");
-//		}
-//		
-//		public  void UpdataClassMSG(){
-//			String sql="",sql2="";
-//			SqlHelper sqlhelp=SqlHelper.getInstance();
-//			UserPosts=ReturnUserPosts();
-//		
-//			for (int i = 0; i < UserPosts.length; i++) {
-//				int NUM=0;
-//				sql="select *from DetailMsg where UserPost="+"'"+UserPosts[i]+"'";
-//				try {
-//					rs=sqlhelp.queryExecute(sql);
-//					while(rs.next()){
-//						NUM++;
-//					}
-//				} catch (Exception e2) {
-//					e2.printStackTrace();
-//				}finally {
-//					sqlhelp.DBclose();
-//				}
-//				sql2="update XustPost set PersonNum="+"'"+NUM+"'"+" where UserPost="+"'"+UserPosts[i]+"'";
-//					try {
-//					sqlhelp.queryExe(sql2);
-//				} catch (Exception e2) {
-//					e2.printStackTrace();
-//				}finally {
-//					sqlhelp.DBclose();
-//				}
-//			}
-//		}	
-//		
+
 	public static void main(String[] args) {
 		StuMenu test2=new StuMenu("管理员");
 
@@ -182,12 +137,21 @@ public class StuMenu extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==MsgFileGetIn){
 			//导入
-			FileCon=new FileControl();
-			FileCon.ReadInFile(this.DBTable);
+//			FileCon=new FileControl();
+//			FileCon.ReadInFile(this.DBTable);
 		}else if(e.getSource()==MsgFileGetOut){
 			//导出
-			FileCon=new FileControl();
-			FileCon.SaveToFile(this.DBTable);
+			JFileChooser Fch2=new JFileChooser();
+			Fch2.setDialogTitle("另存为..");
+			//默认显示
+			final int value=Fch2.showSaveDialog(null);
+			Fch2.setVisible(true);
+			if(value==Fch2.CANCEL_OPTION)
+				return;
+			String filepath=Fch2.getSelectedFile().getAbsolutePath();
+			FileGetOutWorker getOutWorker=new FileGetOutWorker(filepath);
+			getOutWorker.execute();
+
 		}
 		
 		
@@ -196,7 +160,8 @@ public class StuMenu extends JFrame implements ActionListener{
 			
 		}else if(e.getSource()==EnterIn){
 		 stuAddDiaLog=new StuAddDiaLog(this, "档案录入", true);
-			
+		 CallTableWorker updata=new CallTableWorker();
+			updata.execute();
 		}
 		if(e.getSource()==update){
 			CallTableWorker updata=new CallTableWorker();
@@ -222,13 +187,10 @@ public class StuMenu extends JFrame implements ActionListener{
 				JOptionPane.showMessageDialog(this, "请选中一行");
 			    return;
 			}
-			String UserID=(String)UMM.getValueAt(rowNum, 0);
+			String UserNum=(String)model.getValueAt(rowNum, 0);
 	
-			uum=new UserUPMsg(this, true, UserID);
-				UMM=new UserMsgModel();
-				String sql2 ="select * from DetailMsg";
-				UMM.queryUser(sql2,this.TableParas,DBTable);
-				jtb.setModel(UMM);//获取新的数据模型 
+			uum=new UserUPMsg(this, true, UserNum);
+
 		}
 		
 		if(e.getSource()==jb4){
@@ -240,7 +202,7 @@ public class StuMenu extends JFrame implements ActionListener{
 			    return;
 			}
 			//转换成String 传入进model
-			String UserNum=(String)UMM.getValueAt(rowNum, 0);
+			String UserNum=(String)model.getValueAt(rowNum, 0);
 			//获得选中的这行的 第一个字段（列）
 			/*
 			 * 弹出窗口确认是否要删除
@@ -248,28 +210,73 @@ public class StuMenu extends JFrame implements ActionListener{
 			int	res=JOptionPane.showConfirmDialog(null, 
 					"是否打算删除？", "请选择..", JOptionPane.YES_NO_OPTION);
 					if(res==JOptionPane.YES_OPTION){
-						String sql ="delete from DetailMsg where UserNum=?";
-						String[] paras={UserNum};
-						UserMsgModel temp=new UserMsgModel();
-						if(temp.EditUser(sql,paras,"delete")){
-							JOptionPane.showMessageDialog(this, "删除成功！请刷新");
-						}else {
-							JOptionPane.showMessageDialog(this, "删除失败！");
-								
-						}
-						UMM=new UserMsgModel();
-						 String sql2 ="select * from DetailMsg";
-						  UMM.queryUser(sql2,this.TableParas,DBTable);
-						jtb.setModel(UMM);//获取新的数据模型 
+						AskDeleteWorker askServerDelete=new AskDeleteWorker(UserNum);
+						askServerDelete.execute();
 						
 					   }
-			
-			
 		}
 		
 	}
-
-	private class FindTheOneWorker extends SwingWorker<Void, Vector<String>>{
+	private class FileGetOutWorker extends SwingWorker<Void, Void>{
+		
+		private Vector rowData;
+		private String filepath;
+		private FileWriter fw=null;
+		private BufferedWriter bw=null;
+		public FileGetOutWorker(String filepath){
+			this.filepath=filepath;
+		}
+	
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.FileGetOutMsg);
+			tableMsg.setMenu(Msg.StuMenu);
+			try {
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				if(sMsg.getMsgType()==Msg.RespondStuFileOutMsg){
+						this.rowData=sMsg.getEnrowData();
+						DBMsg.TransInfo(this.rowData);
+						try{
+						fw=new FileWriter(filepath);
+						bw=new BufferedWriter(fw);
+						for(Object V:this.rowData){
+							Vector Details=(Vector)V;
+							String RowMsg="";
+							for (int i = 0; i < Details.size(); i++) {
+								RowMsg+=Details.get(i)+" ";
+							}
+							RowMsg+="\r\n";
+							bw.write(RowMsg);
+						}
+						JOptionPane.showMessageDialog(null, "导出完成！");
+						} catch (Exception e2) {
+								e2.printStackTrace();
+							}  finally{
+								try {
+									bw.close();
+									fw.close();
+								} catch (Exception e3) {
+									e3.printStackTrace();
+								}
+							}	
+					
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			return null;
+		}
+	}
+	private class FindTheOneWorker extends SwingWorker<Void, Void>{
 		
 		private Vector columnNames;
 		private Vector rowData;
@@ -309,12 +316,11 @@ public class StuMenu extends JFrame implements ActionListener{
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
-			
 			return null;
 		}
 	}
 	
-	private class CallTableWorker extends SwingWorker<Void, Vector<String>>{
+	private class CallTableWorker extends SwingWorker<Void, Void>{
 		
 		private Vector columnNames;
 		private Vector rowData;
@@ -356,6 +362,57 @@ public class StuMenu extends JFrame implements ActionListener{
 		}
 
 	}
+	private class AskDeleteWorker extends SwingWorker<Void, Void>{
+		private String UserNum;
+		public AskDeleteWorker(String UserNum){
+			this.UserNum=UserNum;
+		}
 	
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.DeleteMsg);
+			tableMsg.setMenu(Msg.StuMenu);
+			byte[] enUserNum = AESCoder.encrypt(this.UserNum.getBytes(), SecretInfo.getKey());
+			tableMsg.setEnUserNum(enUserNum);
+			try {
+			
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				
+				if(sMsg.getMsgType()==Msg.RespondStuDeleteMsg){
+					//消息解密
+					byte[] DeMsg=AESCoder.decrypt(sMsg.getEnMsg(), SecretInfo.getKey());
+					String msgString=new String(DeMsg);
+					//签名验证--用Server的证书公钥
+					String sha1Hex2 = DigestUtils.sha1Hex(DeMsg);
+					boolean flag=CertificateCoder.verify(sha1Hex2.getBytes(), sMsg.getSign(), ServerMsg.certificatePath);
+					if(flag==false){
+						JOptionPane.showMessageDialog(null, "与服务器通信被拦截修改！中断连接");
+						ss.close();
+						Thread.sleep(5000);
+						System.exit(0);
+					}else{
+						if(msgString.equals(Msg.OKmsg)){
+							JOptionPane.showMessageDialog(StuMenu.this, "删除成功！请刷新");
+							CallTableWorker updata=new CallTableWorker();
+							updata.execute();}
+						else 
+							JOptionPane.showMessageDialog(StuMenu.this, "删除失败！");
+						}
+					
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			return null;
+		}
+	}
 	
 }

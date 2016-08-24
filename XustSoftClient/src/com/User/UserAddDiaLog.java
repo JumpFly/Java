@@ -121,8 +121,6 @@ public class UserAddDiaLog extends JDialog implements ActionListener{
 				return;
 			}else if (!String.copyValueOf(password1.getPassword()).equals(String.copyValueOf(password2.getPassword()))) {
 				
-				System.out.println(password1.getPassword().length+" "+password1.getPassword());
-				System.out.println(password2.getPassword().length+" "+password1.getPassword());
 				JOptionPane.showMessageDialog(this, "确认密码不统一！");
 				return;
 			}

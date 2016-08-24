@@ -6,10 +6,14 @@ import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -19,6 +23,16 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
+
+import org.apache.commons.codec.digest.DigestUtils;
+
+import com.Common.Msg;
+import com.Common.SecretMsg;
+import com.Model.MapHoldReceiveThread;
+import com.Secret.AESCoder;
+import com.Secret.CertificateCoder;
+import com.Stu.StuAddDiaLog;
 import com.Tools.*;
 public class PostAddDiaLog extends JDialog implements ActionListener{
 
@@ -84,32 +98,73 @@ public class PostAddDiaLog extends JDialog implements ActionListener{
 				JOptionPane.showMessageDialog(this, "请填写完整！");
 				return;
 			}
-			UserMsgModel temp=new UserMsgModel();
-			String sql="insert into XustPost values(?,?)";
-		String []paras=
-			{jtf1.getText().trim(),jtf2.getText().trim()};
-		System.out.println(jtf1.getText()+"  "+jtf2.getText());
-		
-			SqlHelper sqlhelp =SqlHelper.getInstance();
-			String XustPost=jtf1.getText().trim();
-			String[] XustPosts={XustPost};
-			if(sqlhelp.CheckExist(XustPosts,"XustPostTable")==true){
-				JOptionPane.showMessageDialog(this, "该部门已存在！");
-			}else{
-			if(!temp.EditUser(sql, paras,"XustPostTable")){
-				JOptionPane.showMessageDialog(this, "添加失败！");
-			  }else{
-				  
-				  JOptionPane.showMessageDialog(this, "添加成功！");
-				  this.dispose(); 
-			  }
-		 }
+			CallAddWorker callAdd=new CallAddWorker(jtf1.getText().trim(), jtf2.getText().trim());
+			callAdd.execute();
+
 		}
 		
 		if(e.getSource()==Cancel){
 			this.dispose();
 		 	}
 	}
-
+	private class CallAddWorker extends SwingWorker<Void, Vector<String>>{
+		
+		private String Post,PostNum;
+		public CallAddWorker(String Post,String PostNum){
+			this.Post=Post;
+			this.PostNum=PostNum;
+		}
+	
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.AddMsg);
+			tableMsg.setMenu(Msg.PostMenu);
+			byte[] enPost = AESCoder.encrypt(Post.getBytes(), SecretInfo.getKey());
+			byte[] enPostNum = AESCoder.encrypt(PostNum.getBytes(), SecretInfo.getKey());
+			tableMsg.setEnPost(enPost);
+			tableMsg.setEnPostNum(enPostNum);
+			
+			try {
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				
+				if(sMsg.getMsgType()==Msg.RespondPostAddMsg){
+					//消息解密
+					byte[] DeMsg=AESCoder.decrypt(sMsg.getEnMsg(), SecretInfo.getKey());
+					String msgString=new String(DeMsg);
+					//签名验证--用Server的证书公钥
+					String sha1Hex2 = DigestUtils.sha1Hex(DeMsg);
+					boolean flag=CertificateCoder.verify(sha1Hex2.getBytes(), sMsg.getSign(), ServerMsg.certificatePath);
+					if(flag==false){
+						JOptionPane.showMessageDialog(null, "与服务器通信被拦截修改！中断连接");
+						ss.close();
+						Thread.sleep(5000);
+						System.exit(0);
+					}else{
+						if(msgString.equals(Msg.EXISTmsg))
+							JOptionPane.showMessageDialog(null, "该部门已存在！");
+						else if(msgString.equals(Msg.OKmsg)){
+							JOptionPane.showMessageDialog(null, "添加成功！");
+							PostAddDiaLog.this.dispose();
+						}else {
+							JOptionPane.showMessageDialog(null, "添加失败！");
+							}
+						}
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			
+			return null;
+		}
+	}
 	
 }

@@ -6,12 +6,16 @@ import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -21,6 +25,16 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
+
+import org.apache.commons.codec.digest.DigestUtils;
+
+import com.Common.Msg;
+import com.Common.SecretMsg;
+import com.Model.MapHoldReceiveThread;
+import com.Post.PostAddDiaLog;
+import com.Secret.AESCoder;
+import com.Secret.CertificateCoder;
 import com.Tools.*;
 public class AbsenceDiaLog extends JDialog implements ActionListener{
 
@@ -97,39 +111,9 @@ public class AbsenceDiaLog extends JDialog implements ActionListener{
 					JOptionPane.showMessageDialog(this, "请填写完整！");
 					return;
 				}
-			
-			
-				
-				
-			UserMsgModel temp=new UserMsgModel();
-			String sql="insert into Absence values(?,?,?)";
-		String []paras=
-			{jtf1.getText(),jtf2.getText(),jtf3.getText()};
-		System.out.println(jtf1.getText()+"  "+jtf2.getText()+"   "+jtf3.getText());
-		
-		
-			/*
-			 * 注意：缺勤记录 以学号+日期作为主键
-			 * */
-			SqlHelper sqlhelp =SqlHelper.getInstance();
-			String[] IDs={jtf1.getText().trim(),jtf2.getText().trim()};
-			String[] UserNum={jtf1.getText().trim()};
-			
-			if(!sqlhelp.CheckExist(UserNum,"DetailTable_Up")){
-				JOptionPane.showMessageDialog(this, "该学号不存在！");
-				return;
-			}
-			
-			if(sqlhelp.CheckExist(IDs,"AbsenceTable")==true){
-				JOptionPane.showMessageDialog(this, "该学号日期记录已存在！");
-			}else{
-			if(!temp.EditUser(sql, paras,"AbsenceTable")){
-				JOptionPane.showMessageDialog(this, "添加失败！");
-			  }else{
-				  JOptionPane.showMessageDialog(this, "添加成功！");
-				  this.dispose();
-			  }
-		 }
+				CallAddWorker callAdd=new CallAddWorker(jtf1.getText().trim(), jtf2.getText(), jtf3.getText());
+				callAdd.execute();
+
 		}
 		if(e.getSource()==ResBtn){
 			jtf1.setText("");
@@ -140,6 +124,66 @@ public class AbsenceDiaLog extends JDialog implements ActionListener{
 			this.dispose();
 		 	}
 	}
-
+	private class CallAddWorker extends SwingWorker<Void, Vector<String>>{
+		
+		private String UserNum,Date,Remark;
+		public CallAddWorker(String UserNum,String Date,String Remark){
+			this.UserNum=UserNum;
+			this.Date=Date;
+			this.Remark=Remark;
+		}
+	
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.AddMsg);
+			tableMsg.setMenu(Msg.AbsenceMenu);
+			byte[] enUserNum = AESCoder.encrypt(UserNum.getBytes(), SecretInfo.getKey());
+			byte[] enDate = AESCoder.encrypt(Date.getBytes(), SecretInfo.getKey());
+			byte[] enRemark = AESCoder.encrypt(Remark.getBytes(), SecretInfo.getKey());
+			tableMsg.setEnUserNum(enUserNum);
+			tableMsg.setEnDate(enDate);
+			tableMsg.setEnRemark(enRemark);
+			
+			try {
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				
+				if(sMsg.getMsgType()==Msg.RespondAbsenceAddMsg){
+					//消息解密
+					byte[] DeMsg=AESCoder.decrypt(sMsg.getEnMsg(), SecretInfo.getKey());
+					String msgString=new String(DeMsg);
+					//签名验证--用Server的证书公钥
+					String sha1Hex2 = DigestUtils.sha1Hex(DeMsg);
+					boolean flag=CertificateCoder.verify(sha1Hex2.getBytes(), sMsg.getSign(), ServerMsg.certificatePath);
+					if(flag==false){
+						JOptionPane.showMessageDialog(null, "与服务器通信被拦截修改！中断连接");
+						ss.close();
+						Thread.sleep(5000);
+						System.exit(0);
+					}else{
+						if(msgString.equals(Msg.EXISTmsg))
+							JOptionPane.showMessageDialog(null, "该条记录已存在！");
+						else if(msgString.equals(Msg.OKmsg)){
+							JOptionPane.showMessageDialog(null, "添加成功！");
+							AbsenceDiaLog.this.dispose();
+						}else {
+							JOptionPane.showMessageDialog(null, "添加失败！");
+							}
+						}
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			return null;
+		}
+	}
 	
 }

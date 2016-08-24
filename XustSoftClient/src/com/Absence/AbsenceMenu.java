@@ -2,12 +2,15 @@ package com.Absence;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Vector;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -19,15 +22,20 @@ import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import com.Common.Msg;
 import com.Common.SecretMsg;
 import com.Model.MapHoldReceiveThread;
+import com.Secret.AESCoder;
+import com.Secret.CertificateCoder;
 import com.Stu.StuAddDiaLog;
+import com.Stu.StuMenu;
 import com.Tools.DBMsg;
 import com.Tools.FileControl;
+import com.Tools.SecretInfo;
+import com.Tools.ServerMsg;
 import com.Tools.SqlHelper;
-import com.User.UserMsgModel;
 
 public class AbsenceMenu extends JFrame implements ActionListener{
 
@@ -43,7 +51,6 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 	private JButton jb1,jb2;
 	private JTextField jtf;
 	private DefaultTableModel model;
-	private UserMsgModel UMM;
 	private DBMsg 	dbMsg=new DBMsg();
 	private String UserType;
 	private String DBTable="AbsenceTable";
@@ -113,12 +120,20 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==MsgFileGetIn){
 			//导入
-			FileCon=new FileControl();
-			FileCon.ReadInFile(this.DBTable);
+//			FileCon=new FileControl();
+//			FileCon.ReadInFile(this.DBTable);
 		}else if(e.getSource()==MsgFileGetOut){
 			//导出
-			FileCon=new FileControl();
-			FileCon.SaveToFile(this.DBTable);
+			JFileChooser Fch2=new JFileChooser();
+			Fch2.setDialogTitle("另存为..");
+			//默认显示
+			final int value=Fch2.showSaveDialog(null);
+			Fch2.setVisible(true);
+			if(value==Fch2.CANCEL_OPTION)
+				return;
+			String filepath=Fch2.getSelectedFile().getAbsolutePath();
+			FileGetOutWorker getOutWorker=new FileGetOutWorker(filepath);
+			getOutWorker.execute();
 		}
 		
 		if(e.getSource()==Add){
@@ -132,26 +147,15 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 			    return;
 			}
 			//转换成String 传入进model
-			String ID=(String)UMM.getValueAt(rowNum, 0);
+			String Num=(String)model.getValueAt(rowNum, 0);
+			String date=(String)model.getValueAt(rowNum, 1);
 			
 			int	res=JOptionPane.showConfirmDialog(null, 
 					"是否打算删除？", "请选择..", JOptionPane.YES_NO_OPTION);
 					if(res==JOptionPane.YES_OPTION){
-						String sql ="delete from Absence where UserNum=?";
-						String[] paras={ID};
-						UserMsgModel temp=new UserMsgModel();
-						if(temp.EditUser(sql,paras,"delete")){
-							JOptionPane.showMessageDialog(this, "删除成功！");
-						}else {
-							JOptionPane.showMessageDialog(this, "删除失败！");
-								
-						}
-						
-						UMM=new UserMsgModel();
-						 String sql2 ="select * from Absence";
-						  UMM.queryUser(sql2,this.TableParas,DBTable);
-						jtb.setModel(UMM);//获取新的数据模型 
-						
+						AskDeleteWorker askServerDelete=new AskDeleteWorker(Num, date);
+						askServerDelete.execute();
+
 					   }
 			
 			
@@ -172,7 +176,68 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 		}
 		
 	}
-	private class FindTheOneWorker extends SwingWorker<Void, Vector<String>>{
+	
+private class FileGetOutWorker extends SwingWorker<Void, Void>{
+		
+		private Vector rowData;
+		private String filepath;
+		private FileWriter fw=null;
+		private BufferedWriter bw=null;
+		public FileGetOutWorker(String filepath){
+			this.filepath=filepath;
+		}
+	
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.FileGetOutMsg);
+			tableMsg.setMenu(Msg.AbsenceMenu);
+			try {
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				if(sMsg.getMsgType()==Msg.RespondAbsenceFileOutMsg){
+						this.rowData=sMsg.getEnrowData();
+						DBMsg.TransInfo(this.rowData);
+						try{
+						fw=new FileWriter(filepath);
+						bw=new BufferedWriter(fw);
+						for(Object V:this.rowData){
+							Vector Details=(Vector)V;
+							String RowMsg="";
+							for (int i = 0; i < Details.size(); i++) {
+								RowMsg+=Details.get(i)+" ";
+							}
+							RowMsg+="\r\n";
+							bw.write(RowMsg);
+						}
+						JOptionPane.showMessageDialog(null, "导出完成！");
+						} catch (Exception e2) {
+								e2.printStackTrace();
+							}  finally{
+								try {
+									bw.close();
+									fw.close();
+								} catch (Exception e3) {
+									e3.printStackTrace();
+								}
+							}	
+					
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			return null;
+		}
+	}
+	
+	private class FindTheOneWorker extends SwingWorker<Void, Void>{
 		
 		private Vector columnNames;
 		private Vector rowData;
@@ -199,8 +264,6 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
 				SecretMsg sMsg=(SecretMsg)ois.readObject();
 				
-				
-				
 				if(sMsg.getMsgType()==Msg.RespondAbsence_MSG){
 					if(sMsg.getOKorNo().equals(Msg.OKmsg)){
 						this.columnNames=sMsg.getColumnNames();
@@ -219,7 +282,7 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 			return null;
 		}
 	}
-	private class CallTableWorker extends SwingWorker<Void, Vector<String>>{
+	private class CallTableWorker extends SwingWorker<Void, Void>{
 		
 		private Vector columnNames;
 		private Vector rowData;
@@ -260,5 +323,58 @@ public class AbsenceMenu extends JFrame implements ActionListener{
 			model.setDataVector(this.rowData , this.columnNames);
 		}
 	}
+	private class AskDeleteWorker extends SwingWorker<Void, Void>{
+		private String UserNum,UserDate;
+		public AskDeleteWorker(String UserNum,String UserDate){
+			this.UserNum=UserNum;
+			this.UserDate=UserDate;
+		}
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.DeleteMsg);
+			tableMsg.setMenu(Msg.AbsenceMenu);
+			byte[] enUserNum = AESCoder.encrypt(this.UserNum.getBytes(), SecretInfo.getKey());
+			byte[] enUserDate = AESCoder.encrypt(this.UserDate.getBytes(), SecretInfo.getKey());
+			tableMsg.setEnUserNum(enUserNum);
+			tableMsg.setEnDate(enUserDate);
+			try {
+			
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				
+				if(sMsg.getMsgType()==Msg.RespondAbsenceDeleteMsg){
+					//消息解密
+					byte[] DeMsg=AESCoder.decrypt(sMsg.getEnMsg(), SecretInfo.getKey());
+					String msgString=new String(DeMsg);
+					//签名验证--用Server的证书公钥
+					String sha1Hex2 = DigestUtils.sha1Hex(DeMsg);
+					boolean flag=CertificateCoder.verify(sha1Hex2.getBytes(), sMsg.getSign(), ServerMsg.certificatePath);
+					if(flag==false){
+						JOptionPane.showMessageDialog(null, "与服务器通信被拦截修改！中断连接");
+						ss.close();
+						Thread.sleep(5000);
+						System.exit(0);
+					}else{
+						if(msgString.equals(Msg.OKmsg))
+							JOptionPane.showMessageDialog(AbsenceMenu.this, "删除成功！请刷新");
+						else 
+							JOptionPane.showMessageDialog(AbsenceMenu.this, "删除失败！");
 
+						}
+				
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			return null;
+		}
+	}
 }

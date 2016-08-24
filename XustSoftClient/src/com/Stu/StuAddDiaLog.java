@@ -7,9 +7,13 @@ import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -19,6 +23,15 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
+
+import org.apache.commons.codec.digest.DigestUtils;
+
+import com.Common.Msg;
+import com.Common.SecretMsg;
+import com.Model.MapHoldReceiveThread;
+import com.Secret.AESCoder;
+import com.Secret.CertificateCoder;
 import com.Tools.*;
 public class StuAddDiaLog extends JDialog implements ActionListener{
 	private ResultSet rs=null;
@@ -93,9 +106,7 @@ public class StuAddDiaLog extends JDialog implements ActionListener{
 			this.dispose();
 		 }
 		if(e.getSource()==ResBtn){
-			for(int i=0;i<jtf.length;i++){
-				jtf[i].setText("");
-			}
+			Resset();
 		 }
 		if(e.getSource()==Choose){
 			
@@ -107,44 +118,101 @@ public class StuAddDiaLog extends JDialog implements ActionListener{
 							JOptionPane.showMessageDialog(this, "账号/学号/邮箱不能为空！");
 							return;
 						}
-					UserMsgModel temp=new UserMsgModel();
-					
-					String sql="insert into DetailMsg (UserID,UserNum,UserName,UserSex,UserMajor,UserMail)values(?,?,?,?,?,?)";
-					String []paras=
-					{jtf[0].getText().trim(),jtf[1].getText().trim(),jtf[2].getText().trim(),jtf[3].getText().trim(),jtf[4].getText().trim(),jtf[5].getText().trim()};
-					System.out.println(jtf[0].getText()+" "+jtf[1].getText()+" "+jtf[2].getText()+" "+jtf[3].getText()+" "+jtf[4].getText()+" "+jtf[5].getText());
-			
-					SqlHelper sqlhelp =SqlHelper.getInstance();
-					String[] IDs={jtf[0].getText().trim(),jtf[1].getText().trim(),};
-					if(sqlhelp.CheckExist(IDs,"PersonTable")==true){
-						JOptionPane.showMessageDialog(this, "该ID或学号已存在！");
-					}else{
-						if(!temp.EditUser(sql, paras,"DetailMsg_Up")){
-							JOptionPane.showMessageDialog(this, "添加失败！");
-						  }else{
-							  JOptionPane.showMessageDialog(this, "添加成功！");
-							  String sql2="insert into Person values(?,?,?,?,?)";
-							  String []paras2=
-									{jtf[0].getText().trim(),"123456","会员",jtf[1].getText().trim(),jtf[5].getText().trim()};
-									
-							  sqlhelp.EditExec(sql2, paras2, "PersonTable");
-						  }
-					}
-					
+						CallAddWorker callAdd=new CallAddWorker(jtf[0].getText().trim(),jtf[1].getText().trim(),jtf[2].getText().trim(),jtf[3].getText().trim(),jtf[4].getText().trim(),jtf[5].getText().trim());
+						callAdd.execute();
+				
 					}
 			}
 		
 	}
-	public boolean TextFiledIsEmpty(){
+	private void Resset(){
+		for(int i=0;i<jtf.length;i++){
+			jtf[i].setText("");
+		}
+	}
+	private boolean TextFiledIsEmpty(){
 		boolean flag=false;
 		String jtf0=jtf[0].getText().trim();
-		String jtf1=jtf[0].getText().trim();
-		String jtf5=jtf[0].getText().trim();
+		String jtf1=jtf[1].getText().trim();
+		String jtf5=jtf[5].getText().trim();
 		if(jtf0.toLowerCase().equals("null")||jtf1.toLowerCase().equals("null")||jtf5.toLowerCase().equals("null"))
 			flag= true;
 		if(jtf0.equals("")||jtf1.equals("")||jtf5.equals(""))
 			flag= true;
 		return flag;
 	}
+
+	private class CallAddWorker extends SwingWorker<Void, Vector<String>>{
+		
+		private String UserID,UserNum,UserName,UserSex,UserMajor,UserMail;
+		public CallAddWorker(String UserID,String UserNum,String UserName,String UserSex,String UserMajor,String UserMail){
+			this.UserID=UserID;
+			this.UserNum=UserNum;
+			this.UserName=UserName;
+			this.UserSex=UserSex;
+			this.UserMajor=UserMajor;
+			this.UserMail=UserMail;
+		}
+	
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.AddMsg);
+			tableMsg.setMenu(Msg.StuMenu);
+			byte[] enUserID = AESCoder.encrypt(UserID.getBytes(), SecretInfo.getKey());
+			byte[] enUserNum = AESCoder.encrypt(UserNum.getBytes(), SecretInfo.getKey());
+			byte[] enUserMail = AESCoder.encrypt(UserMail.getBytes(), SecretInfo.getKey());
+			byte[] enUserName = AESCoder.encrypt(UserName.getBytes(), SecretInfo.getKey());
+			byte[] enUserSex = AESCoder.encrypt(UserSex.getBytes(), SecretInfo.getKey());
+			byte[] enUserMajor = AESCoder.encrypt(UserMajor.getBytes(), SecretInfo.getKey());
+			tableMsg.setEnUserID(enUserID);
+			tableMsg.setEnUserNum(enUserNum);
+			tableMsg.setEnUserName(enUserName);
+			tableMsg.setEnUserMail(enUserMail);
+			tableMsg.setEnUserMajor(enUserMajor);
+			tableMsg.setEnUserSex(enUserSex);
+			try {
+				if(MapHoldReceiveThread.IsEmpty())
+					return null;
+				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
+				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
+				oos.writeObject(tableMsg);
+				
+				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+				SecretMsg sMsg=(SecretMsg)ois.readObject();
+				
+				if(sMsg.getMsgType()==Msg.RespondStuAddMsg){
+					//消息解密
+					byte[] DeMsg=AESCoder.decrypt(sMsg.getEnMsg(), SecretInfo.getKey());
+					String msgString=new String(DeMsg);
+					//签名验证--用Server的证书公钥
+					String sha1Hex2 = DigestUtils.sha1Hex(DeMsg);
+					boolean flag=CertificateCoder.verify(sha1Hex2.getBytes(), sMsg.getSign(), ServerMsg.certificatePath);
+					if(flag==false){
+						JOptionPane.showMessageDialog(null, "与服务器通信被拦截修改！中断连接");
+						ss.close();
+						Thread.sleep(5000);
+						System.exit(0);
+					}else{
+						if(msgString.equals(Msg.EXISTmsg))
+							JOptionPane.showMessageDialog(StuAddDiaLog.this, "该ID或工号已存在！");
+						else if(msgString.equals(Msg.OKmsg)){
+							JOptionPane.showMessageDialog(StuAddDiaLog.this, "添加成功！");
+							Resset();
+							StuAddDiaLog.this.dispose();
+						}else {
+							JOptionPane.showMessageDialog(StuAddDiaLog.this, "添加失败！");
+							}
+						}
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			
+			return null;
+		}
+	}
+	
 
 }
