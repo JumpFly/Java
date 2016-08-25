@@ -45,7 +45,10 @@ public interface Msg {
 	public static final int RespondStuFileOutMsg=37;	
 	public static final int RespondPostFileOutMsg=38;	
 	public static final int RespondAbsenceFileOutMsg=39;	
-	
+	public static final int ClientQuitMsg=40;	
+	public static final int RespondQuitMsg=41;	
+	public static final int TransFileMsg=42;	
+	public static final int RespondTransFileMsg=43;	
 	
 	public static final String OKmsg="OK";
 	public static final String NOmsg="NO";

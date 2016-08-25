@@ -35,7 +35,9 @@ public class MapHoldReceiveThread {
  	public static void setOis(ObjectInputStream ois) {
  		MapHoldReceiveThread.ois = ois;
  	}
-     
+ 	public static void RemoveSocket() {
+ 		hm.remove("ClientReceiveThread");
+ 	}
      public static boolean IsEmpty(){
     	
      	return hm.isEmpty(); 

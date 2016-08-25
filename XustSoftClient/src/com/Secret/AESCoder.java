@@ -53,8 +53,6 @@ public class AESCoder {
 		Key K=toKey(key);
 		Cipher cipher=Cipher.getInstance(CIPHER_ALGORITHM);
 		cipher.init(Cipher.DECRYPT_MODE, K);
-		
-			
 		return cipher.doFinal(data);
 	}
 	public static byte[] decrypt(byte[] data,String key)throws Exception{
@@ -88,9 +86,6 @@ public class AESCoder {
 		crypt(fileIn, fileOut, cipher);
 		
 	}
-	public static void encryptFile(String FilePath,String EnFilePath,String key)throws Exception{
-		encryptFile(FilePath, EnFilePath, getKey(key));
-	}
 	public static void decryptFile(String EnFilePath,String DeFilePath,byte[] key)throws Exception{
 		
 		FileInputStream fileIn= new FileInputStream(EnFilePath);
@@ -100,9 +95,6 @@ public class AESCoder {
 		cipher.init(Cipher.DECRYPT_MODE, K);
 		crypt(fileIn, fileOut, cipher);
 		
-	}
-	public static void decryptFile(String EnFilePath,String DeFilePath,String key)throws Exception{
-		decryptFile(EnFilePath, DeFilePath, getKey(key));
 	}
 	/* 生成密钥
 	 * byte[] 二进制密钥
@@ -151,9 +143,9 @@ public class AESCoder {
 	}
 	
 	public static void main(String[] args)throws Exception{
-		String inputStr="AES";
+		String inputStr="AESqwertyuiop[asdfghjkmbbvcxzaf1gjuiugd";
 		byte[] inputData=inputStr.getBytes();
-		System.out.println("原文:\t"+inputStr);
+		System.out.println("原文:\t"+inputStr+","+inputStr.length());
 		//初始化密钥
 	//	byte[] key=AESCoder.initKey();
 	//	System.out.println("密钥:\t"+Base64.encodeBase64String(key));
@@ -170,13 +162,13 @@ public class AESCoder {
 		//校验
 		System.out.println(inputStr.equals(outputStr));
 		
-		System.out.println("文件加密");
-		byte[] kkey=AESCoder.getKey(key);
+//		System.out.println("文件加密");
+//		byte[] kkey=AESCoder.getKey(key);
 		
-		AESCoder.encryptFile("D:\\FileBox\\JAVA3D.zip", "D:\\FileBox\\EnJAVA3D.zip", kkey);
-		System.out.println("ok encrypt");
-		AESCoder.decryptFile("D:\\FileBox\\EnJAVA3D.zip", "D:\\FileBox\\DeJAVA3D.zip", kkey);
-		System.out.println("ok decrypt");
+//		AESCoder.encryptFile("D:\\FileBox\\JAVA3D.zip", "D:\\FileBox\\EnJAVA3D.zip", kkey);
+//		System.out.println("ok encrypt");
+//		AESCoder.decryptFile("D:\\FileBox\\EnJAVA3D.zip", "D:\\FileBox\\DeJAVA3D.zip", kkey);
+//		System.out.println("ok decrypt");
 	}
 
 }

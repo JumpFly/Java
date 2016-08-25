@@ -123,64 +123,6 @@ public class LoginView extends JFrame implements ActionListener{
 	     this.setSize(410,600);
 	     this.setLocation(800,200);
 	     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-	     this.addWindowListener(new WindowListener() {
-
-			@Override
-			public void windowOpened(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void windowClosing(WindowEvent e) {
-				//在此处发送给Server 请求关闭链接
-				if(!MapHoldReceiveThread.IsEmpty()){
-					Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
-					if(ss!=null)
-						try {
-							ss.close();
-							System.out.println("exist");
-							System.exit(0);
-						} catch (IOException e1) {
-							
-							e1.printStackTrace();
-						}
-				}
-				
-			}
-
-			@Override
-			public void windowClosed(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void windowIconified(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void windowDeiconified(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void windowActivated(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void windowDeactivated(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-		
-			
-		});
 	   this.setResizable(false);
 	    //显示窗体
 	     this.setVisible(true);
@@ -191,7 +133,6 @@ public class LoginView extends JFrame implements ActionListener{
 		SecretInfo.setPublicKey(RSACoder.getPublicKey(keyMap));//非对称RSA公钥
 		SecretInfo.setPrivateKey(RSACoder.getPrivateKey(keyMap));//非对称RSA私钥
 		SecretInfo.setKey(AESCoder.initKey());//生成对称AES密钥
-		
 		EventQueue.invokeLater(new Runnable()
         {
            public void run()
@@ -199,9 +140,6 @@ public class LoginView extends JFrame implements ActionListener{
         	   LoginView LV=new LoginView();
            }
         });
-		
-		
-		
 		
 	}
 
@@ -223,29 +161,7 @@ public class LoginView extends JFrame implements ActionListener{
 			
 			sendLoginWorker=new SendLoginWorker(Pass, UserID, Type);
 			sendLoginWorker.execute();
-			
-			
-//			
-//			SqlHelper sqlhelp=SqlHelper.getInstance();
-//			try {
-//				rs=sqlhelp.queryExec(UserID);		
-//				while(rs.next()){
-//					UserPass=rs.getString(2);
-//					UserType=rs.getString(3);
-//				}
-//				
-//			} catch (Exception e2) {
-//				e2.printStackTrace();
-//			}
-//			if(Pass.equals(UserPass)&&Type.equals(UserType)){
-//				JOptionPane.showMessageDialog(this, "登录成功！");
-//				System.out.println(UserID+"  "+UserPass+"  "+UserType);
-//				sqlhelp.DBclose();
-//				ControlMenu CCM=new ControlMenu(UserID,UserType);
-//				this.dispose();
-//			}else{
-//				JOptionPane.showMessageDialog(this, "ID/密码/类型 错误！");
-//			}
+	
 		}	
 		if(e.getSource()==jb2){
 			if(!IsSafe){
@@ -318,6 +234,7 @@ public class LoginView extends JFrame implements ActionListener{
 						if(msgString.equals(Msg.OKmsg)){
 							JOptionPane.showMessageDialog(null, "登录成功！");
 							ControlMenu CCM=new ControlMenu(UserID,Type);
+							CCM.setVisible(true);
 							LoginView.this.dispose();
 							}else {
 								JOptionPane.showMessageDialog(null, "ID/密码/类型 错误！");
