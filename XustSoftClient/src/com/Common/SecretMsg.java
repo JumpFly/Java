@@ -25,8 +25,18 @@ public class SecretMsg implements java.io.Serializable{
 	private String FindTwo;
 	private String OKorNo;
 	private int Menu;
+	private String fileName;
+	private String[] PostName;
 	
-	private String[] PostName;	
+	
+	
+
+	public String getFileName() {
+		return fileName;
+	}
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
 	public String[] getPostName() {
 		return PostName;
 	}

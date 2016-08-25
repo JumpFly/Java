@@ -140,6 +140,10 @@ public class AESCoder {
 			out.write(outBytes);
 		if(fcIn!=null)
 			fcIn.close();
+		if(in!=null)
+			in.close();
+		if(out!=null)
+			out.close();
 	}
 	
 	public static void main(String[] args)throws Exception{

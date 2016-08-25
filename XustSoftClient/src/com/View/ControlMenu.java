@@ -12,13 +12,18 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -43,9 +48,11 @@ import com.Common.SecretMsg;
 import com.Model.MapHoldReceiveThread;
 import com.Post.PostMenu;
 import com.Secret.AESCoder;
+import com.Secret.CertificateCoder;
 import com.Stu.StuMenu;
 import com.Tools.DBMsg;
 import com.Tools.SecretInfo;
+import com.Tools.ServerMsg;
 public class ControlMenu extends JFrame implements ActionListener {
 
 	
@@ -151,6 +158,10 @@ public class ControlMenu extends JFrame implements ActionListener {
 				ex.printStackTrace();
 				}
 			}
+		File theFile=new File("D:\\XustSoftCache\\");
+		if(!theFile.isDirectory())
+			theFile.mkdir();
+		
 		
 		myFont =new Font("黑体",Font.PLAIN,20);
 		this.UserID=UserID;
@@ -273,12 +284,12 @@ public class ControlMenu extends JFrame implements ActionListener {
 			//得到选中文件的绝对路径
 			String filepath=Fch1.getSelectedFile().getAbsolutePath();
 			String fileName=Fch1.getSelectedFile().getName();
-//			
-//			
-//			TransFileWorker transFileWorker=new TransFileWorker(filepath,fileName);
-//			transFileWorker.execute();
-//			InfoDialog=new Dialog();
-//				
+			
+			
+			TransFileWorker transFileWorker=new TransFileWorker(filepath,fileName);
+			transFileWorker.execute();
+			InfoDialog=new Dialog();
+				
 		}
 		if(e.getSource()==jb1){
 			
@@ -311,72 +322,120 @@ public class ControlMenu extends JFrame implements ActionListener {
 		}
 		
 	}
-//
-//	private class TransFileWorker extends SwingWorker<Void, Void>{
-//		
-//		private String filepath;
-//		private String fileName;
-//		private FileInputStream In=null;
-//		public TransFileWorker(String filepath,String fileName){
-//			this.filepath=filepath;
-//			this.fileName=fileName;
-//		}
-//	
-//		@Override
-//		protected synchronized Void doInBackground() throws Exception {
-//			
-//			SecretMsg tableMsg=new SecretMsg();
-//			tableMsg.setMsgType(Msg.TransFileMsg);
-//			try {
-//				if(MapHoldReceiveThread.IsEmpty())
-//					return null;
-//				Socket ss=MapHoldReceiveThread.getClientConSerThread().getSocket();
-//				ObjectOutputStream oos=new ObjectOutputStream(ss.getOutputStream());
-//				byte[] enFileName=AESCoder.encrypt(this.fileName.getBytes(), SecretInfo.getKey());
-//				tableMsg.setEnMsg(enFileName);
-//				
-//				
-//				oos.writeObject(tableMsg);
-//				OutputStream out=ss.getOutputStream();
-//				AESCoder.encryptTransFile(this.filepath, out, SecretInfo.getKey());
-//				 JOptionPane.showMessageDialog(null, "上传完成！");
-//				   InfoDialog.Close();
-////				ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
-////				SecretMsg sMsg=(SecretMsg)ois.readObject();
-////				if(sMsg.getMsgType()==Msg.RespondTransFileMsg){
-////					
-////					
-////					
-////				}
-//			} catch (Exception e1) {
-//				e1.printStackTrace();
-//			}
-//			return null;
-//		}
-//	}
-//private	class Dialog extends  JDialog {
-//		  private JProgressBar progressBar;
-//		  private JLabel Note;
-//		  public  Dialog(){
-//			
-//			  progressBar=new JProgressBar();
-//			  progressBar.setBackground(Color.BLUE);
-//			  progressBar.setIndeterminate(true);
-//			  this.add(progressBar);
-//			  this.setTitle("文件正在上传..");
-//			  this.setSize(350, 75);
-//			  this.setResizable(false);
-//			  this.setVisible(true);
-//			  this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-//			 
-//		  }
-//		  public void Close(){
-//			  progressBar.setIndeterminate(false);
-//			  progressBar.setStringPainted(true);
-//			  progressBar.setValue(100);
-//			 this.dispose();
-//		  }
-//		
-//	}
+
+	private class TransFileWorker extends SwingWorker<Void, Void>{
+		private Socket clientSocket;
+		private byte[] EnKey;//对称密钥
+		private final String CachePath="D:\\XustSoftCache\\";
+		private String filepath, enFilePath;
+		private String fileName;
+		private FileInputStream In=null;
+		public TransFileWorker(String filepath,String fileName){
+			this.filepath=filepath;
+			this.fileName=fileName;
+		}
+	private void TransFileToServer(String EnFilePath,OutputStream out) throws Exception{
+		
+		FileInputStream fileIn= new FileInputStream(EnFilePath);
+		FileChannel fcIn=null;
+		MappedByteBuffer mbbfIn=null;
+		int len=0,outLenth;
+		fcIn=fileIn.getChannel();
+		mbbfIn=fcIn.map(FileChannel.MapMode.READ_ONLY, 0, fcIn.size());
+		byte[] outBytes=new byte[1024];
+		boolean more=true;
+			while(more){
+				len=mbbfIn.limit()-mbbfIn.position();
+				if(len>outBytes.length)
+				{	mbbfIn.get(outBytes, 0, outBytes.length);
+				  out.write(outBytes);
+				}else{
+					more=false;
+				}
+			} 
+			if(len>0){mbbfIn.get(outBytes, 0, len);
+				out.write(outBytes,0,len);
+			     }
+			
+		if(fcIn!=null)
+			fcIn.close();
+		if(fileIn!=null)
+			fileIn.close();
+		if(out!=null)
+			out.close();
+		if(clientSocket!=null)
+			clientSocket.close();
+	}
+	private void EncryptKey() throws Exception{
+		EnKey=CertificateCoder.encryptByPublicKey(SecretInfo.getKey(), ServerMsg.certificatePath);
+		
+	}
+		@Override
+		protected synchronized Void doInBackground() throws Exception {
+			File theFile=new File("D:\\XustSoftCache\\");
+			if(!theFile.isDirectory())
+				theFile.mkdir();
+			EncryptKey();
+			clientSocket=new Socket();
+			clientSocket.connect(new InetSocketAddress(ServerMsg.ServerIP, ServerMsg.ServerFile_Port), 10000);
+			//10秒超时
+			ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+			
+			SecretMsg tableMsg=new SecretMsg();
+			tableMsg.setMsgType(Msg.TransFileMsg);
+			tableMsg.setEnMsg(EnKey);
+			tableMsg.setFileName(fileName);
+			oos.writeObject(tableMsg);
+			
+			 enFilePath=this.CachePath+"EN"+fileName;
+			AESCoder.encryptFile(this.filepath, enFilePath, SecretInfo.getKey());
+			
+			OutputStream out=clientSocket.getOutputStream();
+			TransFileToServer(enFilePath, out);
+			 JOptionPane.showMessageDialog(null, "上传完成！");
+			   InfoDialog.Close();
+		
+			return null;
+		}
+		@Override
+		protected void done() {
+		
+			if(clientSocket!=null)
+				try {
+					clientSocket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			File thefile=new File(enFilePath);
+			if(thefile.exists())
+			thefile.deleteOnExit();
+			else
+				System.out.println(enFilePath+" bucunzai");
+		}
+	}
+private	class Dialog extends  JDialog {
+		  private JProgressBar progressBar;
+		  private JLabel Note;
+		  public  Dialog(){
+			
+			  progressBar=new JProgressBar();
+			  progressBar.setBackground(Color.BLUE);
+			  progressBar.setIndeterminate(true);
+			  this.add(progressBar);
+			  this.setTitle("文件正在上传..");
+			  this.setSize(350, 75);
+			  this.setResizable(false);
+			  this.setVisible(true);
+			  this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+			 
+		  }
+		  public void Close(){
+			  progressBar.setIndeterminate(false);
+			  progressBar.setStringPainted(true);
+			  progressBar.setValue(100);
+			 this.dispose();
+		  }
+		
+	}
 	
 }
